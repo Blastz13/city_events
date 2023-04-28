@@ -3,6 +3,7 @@ from typing import TypeVar, Type, Optional, Generic
 from sqlalchemy import select, update, delete
 
 from core.db.session import Base, session
+from core.exceptions import NotFoundException
 from core.repository.enum import SynchronizeSessionEnum
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -15,6 +16,12 @@ class BaseRepo(Generic[ModelType]):
     async def get_by_id(self, id: int) -> Optional[ModelType]:
         query = select(self.model).where(self.model.id == id)
         return await session.execute(query).scalars().first()
+
+    async def get_or_404(self, id: int) -> Optional[ModelType]:
+        query = await session.scalar(select(self.model).where(self.model.id == id))
+        if query is None:
+            raise NotFoundException
+        return query
 
     async def update_by_id(
         self,

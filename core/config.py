@@ -27,8 +27,8 @@ class DevelopmentConfig(Config):
 
 
 class LocalConfig(Config):
-    WRITER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:54322/postgres"
-    READER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:54322/postgres"
+    WRITER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:1/name_databas"
+    READER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:1/name_databas"
 
 
 class ProductionConfig(Config):

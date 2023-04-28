@@ -4,9 +4,12 @@ from typing import List, Type
 from fastapi import Request
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
+from sqlalchemy import select
 
+from app.user.models import User
 from app.user.services import UserService
 from core.exceptions import CustomException, UnauthorizedException
+from core.db import session
 
 
 class BasePermission(ABC):
@@ -51,3 +54,18 @@ class PermissionDependency(SecurityBase):
             cls = permission()
             if not await cls.has_permission(request=request):
                 raise cls.exception
+
+
+class IsOwnerDependency(SecurityBase):
+    def __init__(self, obj):
+        self.obj = obj
+        self.model: APIKey = APIKey(**{"in": APIKeyIn.header}, name="Authorization")
+        self.scheme_name = self.__class__.__name__
+
+    async def __call__(self, request: Request, id: int):
+        if request.user.id is None:
+            return False
+
+        event = await session.scalar(select(self.obj).where(self.obj.id == id))
+        user = await session.scalar(select(User).where(User.id == request.user.id))
+        return user in event.organizators

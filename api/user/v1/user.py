@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
@@ -23,11 +24,11 @@ user_router = APIRouter()
     "",
     response_model=List[GetUserListResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    # dependencies=[Depends(PermissionDependency([IsAdmin]))],
+    dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
 async def get_user_list(
-    limit: int = Query(10, description="Limit"),
-    prev: int = Query(None, description="Prev ID"),
+        limit: int = Query(10, description="Limit"),
+        prev: int = Query(None, description="Prev ID"),
 ):
     data = await UserService().get_user_list(limit=limit, prev=prev)
     return data
