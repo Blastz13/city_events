@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 class GetUserListResponseSchema(BaseModel):
     id: int = Field(..., description="Id")
     email: str = Field(..., description="Email")
-    nickname: str = Field(..., description="Nickname")
+    username: str = Field(..., description="Nickname")
     rating: int = Field(..., description="Rating")
 
     class Config:
@@ -15,12 +15,12 @@ class CreateUserRequestSchema(BaseModel):
     email: str = Field(..., description="Email")
     password1: str = Field(..., description="Password1")
     password2: str = Field(..., description="Password2")
-    nickname: str = Field(..., description="Nickname")
+    username: str = Field(..., description="Nickname")
 
 
 class CreateUserResponseSchema(BaseModel):
     email: str = Field(..., description="Email")
-    nickname: str = Field(..., description="Nickname")
+    username: str = Field(..., description="Nickname")
 
     class Config:
         orm_mode = True

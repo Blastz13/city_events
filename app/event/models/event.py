@@ -1,7 +1,5 @@
-from sqlalchemy import Column, BigInteger, Boolean, Integer, func, String, Float, select, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-
-from core.db import session
 
 from core.db import Base
 from core.db.mixins import TimestampMixin

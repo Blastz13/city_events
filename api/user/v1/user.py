@@ -1,7 +1,6 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
@@ -41,7 +40,7 @@ async def get_user_list(
 )
 async def create_user(request: CreateUserRequestSchema):
     await UserService().create_user(**request.dict())
-    return {"email": request.email, "nickname": request.nickname}
+    return {"email": request.email, "nickname": request.username}
 
 
 @user_router.post(
