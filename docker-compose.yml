@@ -36,7 +36,20 @@ services:
       - '6379:6379'
     networks:
       - backend
+  mongo_db:
+    image: mongo:latest
+    ports:
+    - 27017:27017
+    volumes:
+    - mongodb:/data/db
+    - mongodb_config:/data/configdb
 
 networks:
   backend:
     driver: 'bridge'
+
+volumes:
+ mongodb:
+ mongodb_config:
+ db_volume:
+ pgadmin-data:
