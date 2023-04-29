@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Query
 from starlette.requests import Request
 
+from api.event.v1.request.event import EventByCoordinatesRequest
 from app.event.models import Event
 from app.event.schemas import (
     GetEventListResponseSchema,
@@ -25,6 +26,19 @@ async def get_event_list(
         limit: int = Query(10, description="Limit"),
 ):
     return await EventService().get_event_list(limit=limit)
+
+
+@event_router.post(
+    "/radius",
+    response_model=List[GetEventListResponseSchema],
+    # responses={"400": {"model": ExceptionResponseSchema}},
+    # dependencies=[Depends(PermissionDependency([IsAdmin]))],
+)
+async def get_events_by_radius(
+        coordinates: EventByCoordinatesRequest,
+        radius: int = Query(1000, description="radius")
+):
+    return await EventService().get_events_by_radius(radius, **coordinates.dict())
 
 
 @event_router.get(

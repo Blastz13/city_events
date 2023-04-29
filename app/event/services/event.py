@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 
 from app.user.models import User
 from core.db import session
@@ -23,7 +23,7 @@ class EventService:
 
         query = query.limit(limit)
         result = await session.execute(query)
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     @classmethod
     async def get_event(cls, id: int) -> Event:
@@ -74,3 +74,10 @@ class EventService:
         await session.delete(event)
         await session.commit()
         return {}
+
+    @classmethod
+    async def get_events_by_radius(cls, radius: int, longitude: float, latitude: float) -> Dict:
+        data = await session.scalars(select(Event)
+                                     .where(func.ST_DistanceSphere(Event.geo,
+                                            func.ST_GeomFromText(f"POINT({longitude} {latitude})")) < radius))
+        return data.unique().all()
