@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from api.achievement.v1.achievement import achievement_router
 from api.chat.v1.chat import chat_router
 from api.comment.v1.comment import comment_router
 from api.user.v1.user import user_router as user_v1_router
@@ -12,6 +13,7 @@ router.include_router(event_v1_router, prefix="/api/v1/events", tags=["Event"])
 router.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 router.include_router(chat_router, prefix="/api/v1/chat", tags=["Chat"])
 router.include_router(comment_router, prefix="/api/v1/comment", tags=["Comment"])
+router.include_router(achievement_router, prefix="/api/v1/achievement", tags=["Achievement"])
 
 
 __all__ = ["router"]
