@@ -30,6 +30,9 @@ fileConfig(config.config_file_name)
 from core.config import config
 from app.user.models import *
 from app.event.models import *
+from app.comment.models import *
+from app.achievement.models import *
+from app.chat.models import *
 
 target_metadata = Base.metadata
 

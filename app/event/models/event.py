@@ -40,18 +40,3 @@ class EventOrganizators(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     event_id = Column(Integer, ForeignKey('events.id'))
-
-
-class AchievementUsers(Base):
-    __tablename__ = "achievement_users"
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    achievement_id = Column(Integer, ForeignKey('achievements.id'))
-
-
-class Achievement(Base):
-    __tablename__ = "achievements"
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    title = Column(String, nullable=False)
