@@ -12,11 +12,14 @@ class Config(BaseSettings):
     READER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/fastapi"
     JWT_SECRET_KEY: str = "fastapi"
     JWT_ALGORITHM: str = "HS256"
-    SENTRY_SDN: str = None
-    CELERY_BROKER_URL: str = "amqp://user:bitnami@localhost:5672/"
-    CELERY_BACKEND_URL: str = "redis://:password123@localhost:6379/0"
+    CELERY_BROKER_URL: str = "pyamqp://guest@localhost//"
+    CELERY_BACKEND_URL: str = "rpc://guest@localhost//"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
+    SMTP_SERVER: str = ""
+    SMTP_PORT: int = None
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
 
 
 class DevelopmentConfig(Config):
@@ -29,6 +32,7 @@ class DevelopmentConfig(Config):
 class LocalConfig(Config):
     WRITER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:1/name_databas"
     READER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:1/name_databas"
+    SYNC_WRITER_DB_URL: str = f"postgresql://postgres:password@localhost:1/name_databas"
 
 
 class ProductionConfig(Config):

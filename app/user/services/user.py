@@ -34,6 +34,12 @@ class UserService:
         result = await session.execute(query)
         return result.scalars().all()
 
+    async def get_user(
+        self,
+        user_id: int,
+    ) -> User:
+        return await session.scalar(select(User).where(User.id == user_id))
+
     @Transactional()
     async def create_user(
         self, email: str, password1: str, password2: str, username: str

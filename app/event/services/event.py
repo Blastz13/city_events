@@ -1,6 +1,7 @@
 from typing import List, Dict
 
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, func, DateTime
+import datetime
 
 from app.user.models import User
 from core.db import session
@@ -35,9 +36,9 @@ class EventService:
         user_id = kwargs.pop("user_id")
         event = Event(**kwargs)
         user = await session.execute(select(User).where(User.id == user_id))
-        user = user.scalars().all()
-        event.organizators = user
-        event.members = user
+        user = user.scalars().first()
+        event.organizators.append(user)
+        event.members.append(user)
         session.add(event)
         await session.commit()
         await session.refresh(event)
@@ -79,5 +80,14 @@ class EventService:
     async def get_events_by_radius(cls, radius: int, longitude: float, latitude: float) -> Dict:
         data = await session.scalars(select(Event)
                                      .where(func.ST_DistanceSphere(Event.geo,
-                                            func.ST_GeomFromText(f"POINT({longitude} {latitude})")) < radius))
+                                                                   func.ST_GeomFromText(
+                                                                       f"POINT({longitude} {latitude})")) < radius))
         return data.unique().all()
+
+    @classmethod
+    async def get_upcoming_events(cls) -> Event:
+        events = await session.scalars(
+            select(Event).where(func.coalesce(Event.date_start).cast(DateTime) > datetime.datetime.now(),
+                                func.coalesce(Event.date_start).cast(DateTime) <= datetime.datetime.now()
+                                + datetime.timedelta(minutes=30)))
+        return events.unique().all()
