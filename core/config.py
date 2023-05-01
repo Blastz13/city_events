@@ -12,6 +12,7 @@ class Config(BaseSettings):
     READER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/fastapi"
     JWT_SECRET_KEY: str = "fastapi"
     JWT_ALGORITHM: str = "HS256"
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
     CELERY_BROKER_URL: str = "pyamqp://guest@localhost//"
     CELERY_BACKEND_URL: str = "rpc://guest@localhost//"
     REDIS_HOST: str = "localhost"
