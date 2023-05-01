@@ -17,6 +17,7 @@ from core.fastapi.middlewares import (
     ResponseLogMiddleware,
 )
 from core.helpers.cache import Cache, RedisBackend, CustomKeyMaker
+import sentry_sdk
 
 
 def init_routers(app_: FastAPI) -> None:
@@ -67,14 +68,24 @@ def make_middleware() -> List[Middleware]:
     return middleware
 
 
+def init_sentry() -> None:
+    sentry_sdk.init(
+        dsn=config.SENTRY_DSN,
+        traces_sample_rate=1.0,
+        debug=False,
+        attach_stacktrace=True,
+        profiles_sample_rate=1.0,
+    )
+
+
 def init_cache() -> None:
     Cache.init(backend=RedisBackend(), key_maker=CustomKeyMaker())
 
 
 def create_app() -> FastAPI:
     app_ = FastAPI(
-        title="Hide",
-        description="Hide API",
+        title="City Events",
+        description="City Events API",
         version="1.0.0",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
@@ -83,6 +94,7 @@ def create_app() -> FastAPI:
     )
     init_routers(app_=app_)
     init_listeners(app_=app_)
+    init_sentry()
     init_cache()
     return app_
 
