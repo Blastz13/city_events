@@ -1,13 +1,15 @@
+from asyncio import current_task
 from contextvars import ContextVar, Token
 from typing import Union
 
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
     async_scoped_session,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, scoped_session
 from sqlalchemy.sql.expression import Update, Delete, Insert
 
 from core.config import config
@@ -47,6 +49,11 @@ async_session_factory = sessionmaker(
 )
 session: Union[AsyncSession, async_scoped_session] = async_scoped_session(
     session_factory=async_session_factory,
-    scopefunc=get_session_context,
+    scopefunc=current_task,
 )
+
+
+sync_engine = create_engine(config.SYNC_WRITER_DB_URL)
+sync_session = scoped_session(sessionmaker(bind=sync_engine))
+
 Base = declarative_base()

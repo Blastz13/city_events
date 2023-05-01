@@ -19,7 +19,7 @@ class CreateEventRequestSchema(BaseModel):
     title: str = Field(..., description="title")
     description: str = Field(..., description="description")
     link: str = Field(..., description="link")
-    date_start: datetime.date = Field(..., description="date_start")
+    date_start: datetime.datetime = Field(..., description="date_start")
     limit_member: int = Field(..., description="limit_member")
     location: str = Field(..., description="location")
     longitude: float = Field(..., description="longitude")

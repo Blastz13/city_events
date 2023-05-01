@@ -11,7 +11,7 @@ from app.event.schemas import (
     CreateEventResponseSchema,
 )
 from app.event.services import EventService
-from core.fastapi.dependencies.permission import IsOwnerDependency
+from core.fastapi.dependencies.permission import IsOwnerDependency, PermissionDependency, IsAuthenticated
 
 event_router = APIRouter()
 
@@ -26,6 +26,16 @@ async def get_event_list(
         limit: int = Query(10, description="Limit"),
 ):
     return await EventService().get_event_list(limit=limit)
+
+
+@event_router.get(
+    "/upcoming",
+    response_model=List[GetEventListResponseSchema],
+    # responses={"400": {"model": ExceptionResponseSchema}},
+    # dependencies=[Depends(PermissionDependency([IsAdmin]))],
+)
+async def get_upcoming_events():
+    return await EventService().get_upcoming_events()
 
 
 @event_router.post(
@@ -55,7 +65,7 @@ async def get_event(event_id: int):
     "",
     response_model=CreateEventResponseSchema,
     # responses={"400": {"model": ExceptionResponseSchema}},
-    # dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
 )
 async def create_event(request: Request, event: CreateEventRequestSchema):
     return await EventService().create_event(**event.dict(), user_id=request.user.id)

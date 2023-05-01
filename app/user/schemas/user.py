@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel, Field
 
 
@@ -21,6 +23,24 @@ class CreateUserRequestSchema(BaseModel):
 class CreateUserResponseSchema(BaseModel):
     email: str = Field(..., description="Email")
     username: str = Field(..., description="Nickname")
+
+    class Config:
+        orm_mode = True
+
+
+class AchievementRequestSchema(BaseModel):
+    title: str = Field(..., description="title")
+
+    class Config:
+        orm_mode = True
+
+
+class GetUserResponseSchema(BaseModel):
+    id: int = Field(..., description="Id")
+    email: str = Field(..., description="Email")
+    username: str = Field(..., description="Nickname")
+    rating: int = Field(..., description="Rating")
+    achievements: List[AchievementRequestSchema]  # TODO
 
     class Config:
         orm_mode = True
