@@ -1,5 +1,9 @@
-from typing import List
+import logging
+import pathlib
+from logging.handlers import WatchedFileHandler
+from typing import List, Tuple
 
+import ecs_logging
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,6 +82,23 @@ def init_sentry() -> None:
     )
 
 
+def init_logger(logger_config: Tuple[str] = ('app', 'celery')) -> None:
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    home_path = pathlib.Path(__file__).parent.parent
+    for logger_name in logger_config:
+        esc_handler = WatchedFileHandler(filename=f'{home_path}/logs/elvis.json')
+        esc_handler.setFormatter(ecs_logging.StdlibFormatter())
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(formatter)
+
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.INFO)
+        logger.addHandler(console_handler)
+        logger.addHandler(esc_handler)
+
+
 def init_cache() -> None:
     Cache.init(backend=RedisBackend(), key_maker=CustomKeyMaker())
 
@@ -95,6 +116,7 @@ def create_app() -> FastAPI:
     init_routers(app_=app_)
     init_listeners(app_=app_)
     init_sentry()
+    init_logger()
     init_cache()
     return app_
 
