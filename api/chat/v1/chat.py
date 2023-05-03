@@ -12,7 +12,7 @@ from core.utils import TokenHelper
 from app.chat.services.consumers import ConnectionChatManager
 
 
-from mongo_db import database
+from core.db.mongo_db import database
 
 chat_router = APIRouter()
 manager = ConnectionChatManager()
