@@ -4,12 +4,12 @@ from typing import Any
 import ujson
 
 from core.helpers.cache.base import BaseBackend
-from core.helpers.redis import redis
+from core.helpers.redis import redis_client
 
 
 class RedisBackend(BaseBackend):
     async def get(self, key: str) -> Any:
-        result = await redis.get(key)
+        result = await redis_client.get(key)
         if not result:
             return
 
@@ -24,8 +24,8 @@ class RedisBackend(BaseBackend):
         elif isinstance(response, object):
             response = pickle.dumps(response)
 
-        await redis.set(name=key, value=response, ex=ttl)
+        await redis_client.set(name=key, value=response, ex=ttl)
 
     async def delete_startswith(self, value: str) -> None:
-        async for key in redis.scan_iter(f"{value}::*"):
-            await redis.delete(key)
+        async for key in redis_client.scan_iter(f"{value}::*"):
+            await redis_client.delete(key)
