@@ -1,6 +1,8 @@
+import redis
 from fastapi import APIRouter, Response, Depends
 
 from core.fastapi.dependencies import PermissionDependency, AllowAll
+from core.helpers.redis import redis_client
 
 health_router = APIRouter()
 
@@ -33,3 +35,12 @@ async def elastic_healthcheck():
         return {"message": "Elasticsearch is up"}
     except:
         return {"message": "Elasticsearch is down"}
+
+
+@health_router.get("/redis", status_code=200)
+async def redis_healthcheck():
+    try:
+        redis_client.ping()
+        return {"message": "Redis is up"}
+    except:
+        return {"message": f"Redis is down"}

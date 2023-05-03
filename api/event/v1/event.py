@@ -12,6 +12,7 @@ from app.event.schemas import (
 )
 from app.event.services import EventService
 from core.fastapi.dependencies.permission import IsOwnerDependency, PermissionDependency, IsAuthenticated
+from core.helpers.cache import Cache, CacheTag
 
 event_router = APIRouter()
 
@@ -22,6 +23,7 @@ event_router = APIRouter()
     responses={"400": {"model": ExceptionResponseSchema}},
     # dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
+@Cache.cached(tag=CacheTag.GET_EVENT_LIST, ttl=60)
 async def get_event_list(
         limit: int = Query(10, description="Limit"),
 ):
@@ -34,6 +36,7 @@ async def get_event_list(
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
+@Cache.cached(tag=CacheTag.GET_EVENTS_BY_QUERY, ttl=60)
 async def get_events_by_query(query: str = Query(...)):
     return await EventService().get_events_by_query(query)
 
@@ -54,6 +57,7 @@ async def get_upcoming_events():
     responses={"400": {"model": ExceptionResponseSchema}},
     # dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
+@Cache.cached(tag=CacheTag.GET_EVENTS_BY_RADIUS, ttl=60)
 async def get_events_by_radius(
         coordinates: EventByCoordinatesRequest,
         radius: int = Query(1000, description="radius")

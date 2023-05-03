@@ -24,6 +24,8 @@ class CacheManager:
                 key = await self.key_maker.make(
                     function=function,
                     prefix=prefix if prefix else tag.value,
+                    *args,
+                    **kwargs
                 )
                 cached_response = await self.backend.get(key=key)
                 if cached_response:
