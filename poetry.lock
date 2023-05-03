@@ -418,6 +418,21 @@ files = [
 ]
 
 [[package]]
+name = "ecs-logging"
+version = "2.0.0"
+description = "Logging formatters for ECS (Elastic Common Schema) in Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "ecs-logging-2.0.0.tar.gz", hash = "sha256:d4b791f044e8b96a4707edd4156a35fbe0e593c27ba5f05bae6b007cfab7622c"},
+    {file = "ecs_logging-2.0.0-py3-none-any.whl", hash = "sha256:8acbc164a7c14d96cb6b3b3e90e8b6972f93ddbd0215e71c6823856518f742ff"},
+]
+
+[package.extras]
+develop = ["elastic-apm", "mock", "pytest", "pytest-cov", "structlog"]
+
+[[package]]
 name = "fastapi"
 version = "0.95.1"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -1682,4 +1697,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "6b21726aacaf0b9ccb03b09b93b2994c7ad04dd764db68ff6e56c4678e35ea3f"
+content-hash = "7964e92f0918ee19d7d65b57528ddf02f36170142a872a49c4b02bb25cd2c9e5"

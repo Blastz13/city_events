@@ -56,6 +56,7 @@ geoalchemy2 = "^0.13.2"
 flake8 = "^6.0.0"
 sentry-sdk = {extras = ["fastapi"], version = "^1.21.1"}
 celery = "^5.2.7"
+ecs-logging = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 

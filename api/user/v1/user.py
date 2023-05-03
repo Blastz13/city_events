@@ -44,15 +44,6 @@ async def create_user(request: CreateUserRequestSchema):
 
 
 @user_router.post(
-    "/{user_id}",
-    response_model=GetUserResponseSchema,
-    responses={"400": {"model": ExceptionResponseSchema}},
-)
-async def get_user(user_id: int):
-    return await UserService().get_user(user_id=user_id)
-
-
-@user_router.post(
     "/login",
     response_model=LoginResponse,
     responses={"404": {"model": ExceptionResponseSchema}},
@@ -60,3 +51,12 @@ async def get_user(user_id: int):
 async def login(request: LoginRequest):
     token = await UserService().login(email=request.email, password=request.password)
     return {"token": token.token, "refresh_token": token.refresh_token}
+
+
+@user_router.post(
+    "/{user_id}",
+    response_model=GetUserResponseSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+async def get_user(user_id: int):
+    return await UserService().get_user(user_id=user_id)

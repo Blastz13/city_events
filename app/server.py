@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from api import router
-from api.home.home import home_router
+from api.health.health import health_router
 from core.config import config
 from core.exceptions import CustomException
 from core.fastapi.dependencies import Logging
@@ -21,7 +21,7 @@ import sentry_sdk
 
 
 def init_routers(app_: FastAPI) -> None:
-    app_.include_router(home_router)
+    app_.include_router(health_router)
     app_.include_router(router)
 
 

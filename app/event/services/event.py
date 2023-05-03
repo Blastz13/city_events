@@ -6,6 +6,7 @@ import datetime
 from app.user.models import User
 from core.db import session
 from app.event.models import Event
+from core.db.elastic_db import es_client, ELASTICSEARCH_INDEX
 
 
 class EventService:
@@ -26,12 +27,32 @@ class EventService:
         result = await session.execute(query)
         return result.scalars().unique().all()
 
+    async def get_events_by_query(self, query: str) -> List[Event]:
+        if query:
+            results = await es_client.search(index=ELASTICSEARCH_INDEX, body={
+                "query": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": ["title^2", "description"],
+                        "fuzziness": "AUTO",
+                        "fuzzy_transpositions": True,
+                        "type": "best_fields",
+                        "operator": "or"
+                    }
+                }
+            })
+            event_ids = [int(result["_id"]) for result in results["hits"]["hits"]]
+            events = await session.scalars(select(Event).where(Event.id.in_(event_ids)))
+        else:
+            events = await session.scalars(select(Event))
+        return events.unique().all()
+
     @classmethod
     async def get_event(cls, id: int) -> Event:
         return await session.scalar(select(Event).where(Event.id == id))
 
     @classmethod
-    async def create_event(cls, **kwargs):
+    async def create_event(cls, **kwargs) -> Event:
         kwargs["geo"] = 'POINT({} {})'.format(kwargs["longitude"], kwargs["latitude"])
         user_id = kwargs.pop("user_id")
         event = Event(**kwargs)
@@ -77,7 +98,7 @@ class EventService:
         return {}
 
     @classmethod
-    async def get_events_by_radius(cls, radius: int, longitude: float, latitude: float) -> Dict:
+    async def get_events_by_radius(cls, radius: int, longitude: float, latitude: float) -> List[Event]:
         data = await session.scalars(select(Event)
                                      .where(func.ST_DistanceSphere(Event.geo,
                                                                    func.ST_GeomFromText(
@@ -85,7 +106,7 @@ class EventService:
         return data.unique().all()
 
     @classmethod
-    async def get_upcoming_events(cls) -> Event:
+    async def get_upcoming_events(cls) -> List[Event]:
         events = await session.scalars(
             select(Event).where(func.coalesce(Event.date_start).cast(DateTime) > datetime.datetime.now(),
                                 func.coalesce(Event.date_start).cast(DateTime) <= datetime.datetime.now()
