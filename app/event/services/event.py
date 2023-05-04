@@ -4,6 +4,7 @@ from sqlalchemy import select, update, func, DateTime
 import datetime
 
 from app.user.models import User
+from app.user.services import UserService
 from core.db import session
 from app.event.models import Event
 from core.db.elastic_db import es_client, ELASTICSEARCH_INDEX
@@ -16,18 +17,14 @@ class EventService:
     @classmethod
     async def get_event_list(
             cls,
-            limit: int = 12,
-    ) -> List[User]:
-        query = select(Event)
-
-        if limit > 12:
-            limit = 12
-
-        query = query.limit(limit)
-        result = await session.execute(query)
+            skip: int,
+            limit: int,
+    ) -> List[Event]:
+        result = await session.execute(select(Event).offset(skip).limit(limit).order_by(Event.id))
         return result.scalars().unique().all()
 
-    async def get_events_by_query(self, query: str) -> List[Event]:
+    @classmethod
+    async def get_events_by_query(cls, query: str) -> List[Event]:
         if query:
             results = await es_client.search(index=ELASTICSEARCH_INDEX, body={
                 "query": {
@@ -39,7 +36,10 @@ class EventService:
                         "type": "best_fields",
                         "operator": "or"
                     }
-                }
+                },
+                "sort": [
+                    {"date_start": {"order": "desc"}}
+                ]
             })
             event_ids = [int(result["_id"]) for result in results["hits"]["hits"]]
             events = await session.scalars(select(Event).where(Event.id.in_(event_ids)))
@@ -55,9 +55,8 @@ class EventService:
     async def create_event(cls, **kwargs) -> Event:
         kwargs["geo"] = 'POINT({} {})'.format(kwargs["longitude"], kwargs["latitude"])
         user_id = kwargs.pop("user_id")
+        user = await UserService().get_user(user_id)
         event = Event(**kwargs)
-        user = await session.execute(select(User).where(User.id == user_id))
-        user = user.scalars().first()
         event.organizators.append(user)
         event.members.append(user)
         session.add(event)
@@ -65,10 +64,9 @@ class EventService:
         await session.refresh(event)
         return event
 
-    @classmethod
-    async def add_members_to_event(cls, user_id: int, event_id: int) -> Event:
-        event = await session.scalar(select(Event).where(Event.id == event_id))
-        user = await session.scalar(select(User).where(User.id == user_id))
+    async def add_members_to_event(self, user_id: int, event_id: int) -> Event:
+        event = await self.get_event(event_id)
+        user = await UserService().get_user(user_id)
         event.members.append(user)
         session.add(event)
         await session.commit()
@@ -90,9 +88,8 @@ class EventService:
         await session.commit()
         return await self.get_event(id)
 
-    @classmethod
-    async def remove_event(cls, id: int) -> Dict:
-        event = await session.scalar(select(Event).where(Event.id == id))
+    async def remove_event(self, id: int) -> Dict:
+        event = await self.get_event(id)
         await session.delete(event)
         await session.commit()
         return {}
@@ -102,7 +99,9 @@ class EventService:
         data = await session.scalars(select(Event)
                                      .where(func.ST_DistanceSphere(Event.geo,
                                                                    func.ST_GeomFromText(
-                                                                       f"POINT({longitude} {latitude})")) < radius))
+                                                                       f"POINT({longitude} {latitude})")) < radius,
+                                            func.coalesce(Event.date_start).cast(
+                                                DateTime) >= datetime.datetime.now() - datetime.timedelta(minutes=60)))
         return data.unique().all()
 
     @classmethod
@@ -110,5 +109,5 @@ class EventService:
         events = await session.scalars(
             select(Event).where(func.coalesce(Event.date_start).cast(DateTime) > datetime.datetime.now(),
                                 func.coalesce(Event.date_start).cast(DateTime) <= datetime.datetime.now()
-                                + datetime.timedelta(minutes=30)))
+                                + datetime.timedelta(minutes=30)).order_by(Event.date_start))
         return events.unique().all()

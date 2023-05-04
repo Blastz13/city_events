@@ -38,19 +38,21 @@ def index_document(_, __, target):
     logger.info(f"triggered event.after_insert update {target.id} in elastic")
     doc = {
         "title": target.title,
-        "description": target.description
+        "description": target.description,
+        "date_start": target.date_start,
     }
     loop = asyncio.get_event_loop()
     loop.create_task(es_client.index(index=ELASTICSEARCH_INDEX, id=target.id, body=doc))
 
 
-@event.listens_for(Event, "after_insert")
+@event.listens_for(Event, "after_update")
 def index_document(_, __, target):
     logger.info(f"triggered event.after_insert update {target.id} in elastic")
     doc_update = {
         "doc": {
             "title": target.title,
-            "description": target.description
+            "description": target.description,
+            "date_start": target.date_start,
         }
     }
     loop = asyncio.get_event_loop()

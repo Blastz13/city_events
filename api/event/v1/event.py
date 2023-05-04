@@ -6,7 +6,7 @@ from starlette.requests import Request
 from api.event.v1.request.event import EventByCoordinatesRequest
 from app.event.models import Event
 from app.event.schemas import (
-    GetEventListResponseSchema,
+    GetEventResponseSchema,
     CreateEventRequestSchema,
     CreateEventResponseSchema, ExceptionResponseSchema,
 )
@@ -19,20 +19,21 @@ event_router = APIRouter()
 
 @event_router.get(
     "",
-    response_model=List[GetEventListResponseSchema],
+    response_model=List[GetEventResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     # dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
 @Cache.cached(tag=CacheTag.GET_EVENT_LIST, ttl=60)
 async def get_event_list(
-        limit: int = Query(10, description="Limit"),
+        skip: int = Query(default=None, description="Offset"),
+        limit: int = Query(default=None, description="Limit"),
 ):
-    return await EventService().get_event_list(limit=limit)
+    return await EventService().get_event_list(skip=skip, limit=limit)
 
 
 @event_router.get(
     "/search",
-    response_model=List[GetEventListResponseSchema],
+    response_model=List[GetEventResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
@@ -43,7 +44,7 @@ async def get_events_by_query(query: str = Query(...)):
 
 @event_router.get(
     "/upcoming",
-    response_model=List[GetEventListResponseSchema],
+    response_model=List[GetEventResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     # dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
@@ -53,7 +54,7 @@ async def get_upcoming_events():
 
 @event_router.post(
     "/radius",
-    response_model=List[GetEventListResponseSchema],
+    response_model=List[GetEventResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     # dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )

@@ -12,15 +12,16 @@ comment_router = APIRouter()
 
 
 @comment_router.get(
-    "",
+    "/event/{event_id}",
     response_model=List[CommentResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     # dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
 async def get_comment_list(
+        event_id: int,
         limit: int = Query(10, description="Limit"),
 ):
-    return await CommentService().get_comment_list(limit=limit)
+    return await CommentService().get_comment_list_by_event(event_id=event_id, limit=limit)
 
 
 @comment_router.get(

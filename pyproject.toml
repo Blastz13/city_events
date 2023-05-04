@@ -58,6 +58,7 @@ sentry-sdk = {extras = ["fastapi"], version = "^1.21.1"}
 celery = "^5.2.7"
 ecs-logging = "^2.0.0"
 asyncio = "^3.4.3"
+aioredis = "^2.0.1"
 
 [tool.poetry.dev-dependencies]
 

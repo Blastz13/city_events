@@ -5,11 +5,12 @@ from pydantic import BaseModel, Field
 from app.user.schemas import CreateUserResponseSchema
 
 
-class GetEventListResponseSchema(BaseModel):
+class GetEventResponseSchema(BaseModel):
     id: int = Field(..., description="Id")
     title: str = Field(..., description="Title")
     description: str = Field(..., description="Description")
     rating: int = Field(..., description="Rating")
+    date_start: datetime.datetime = Field(..., description="date_start")
 
     class Config:
         orm_mode = True

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.event.schemas import GetEventListResponseSchema
+from app.event.schemas import GetEventResponseSchema
 from app.user.schemas import CreateUserResponseSchema
 
 
@@ -9,7 +9,7 @@ class CommentResponseSchema(BaseModel):
     rating: int = Field(..., description="rating")
     comment: str = Field(..., description="comment")
     user: CreateUserResponseSchema = Field(..., description="user")
-    event: GetEventListResponseSchema = Field(..., description="event")
+    event: GetEventResponseSchema = Field(..., description="event")
     likes: int = Field(..., description="likes")
 
     class Config:
