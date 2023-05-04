@@ -15,7 +15,8 @@ async def init_elastic():
             "mappings": {
                 "properties": {
                     "title": {"type": "text"},
-                    "description": {"type": "text"}
+                    "description": {"type": "text"},
+                    "date_start": {"type": "date"}
                 }
             }
         })

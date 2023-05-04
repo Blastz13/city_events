@@ -12,11 +12,12 @@ class CommentService:
         ...
 
     @classmethod
-    async def get_comment_list(
+    async def get_comment_list_by_event(
             cls,
+            event_id: int,
             limit: int = 12,
     ) -> List[Comment]:
-        query = select(Comment).options(selectinload(Comment.event))
+        query = select(Comment).options(selectinload(Comment.event)).where(Comment.event_id == event_id)
 
         if limit > 12:
             limit = 12
