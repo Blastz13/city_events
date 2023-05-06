@@ -11,6 +11,7 @@ class Achievement(Base, TimestampMixin):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     title = Column(String, nullable=False)
     users = relationship('User', secondary='achievement_users', back_populates='achievements', lazy='joined')
+    image_url = Column(String)
 
 
 class AchievementUsers(Base):

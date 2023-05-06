@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, UploadFile, File
 
 from app.achievement.schemas import AchievementRequestSchema, AchievementResponseSchema, AssignAchievementRequestSchema
 from app.achievement.services import AchievementService
@@ -40,8 +40,8 @@ async def get_achievement(achievement_id: int):
     # dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
 )
-async def create_achievement(achievement: AchievementRequestSchema):
-    return await AchievementService().create_achievement(**achievement.dict())
+async def create_achievement(achievement: AchievementRequestSchema, file: UploadFile = File(...)):
+    return await AchievementService().create_achievement(file, **achievement.dict())
 
 
 @achievement_router.put(
@@ -51,8 +51,8 @@ async def create_achievement(achievement: AchievementRequestSchema):
     status_code=200,
     # dependencies=[Depends(IsOwnerDependency(Comment))],
 )
-async def update_achievement(achievement_id: int, achievement: AchievementRequestSchema):
-    return await AchievementService().update_achievement(achievement_id, **achievement.dict())
+async def update_achievement(achievement_id: int, achievement: AchievementRequestSchema, file: UploadFile = File(...)):
+    return await AchievementService().update_achievement(achievement_id, file, **achievement.dict())
 
 
 @achievement_router.delete(

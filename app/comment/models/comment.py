@@ -14,6 +14,7 @@ class Comment(Base, TimestampMixin):
     comment = Column(String, nullable=False)
     rating = Column(Integer, default=0, nullable=False)
     likes = Column(Integer, default=0, nullable=False)
+    image_url = Column(String)
 
     user = relationship('User', backref='comments', lazy='joined')
     event = relationship('Event', back_populates='comments', lazy='joined')

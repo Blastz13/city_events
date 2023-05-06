@@ -1,9 +1,12 @@
+import os
 from typing import List, Dict
 
+from fastapi import UploadFile
 from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
 from app.comment.models import Comment
+from core.config import config
 from core.db import session
 
 
@@ -32,7 +35,13 @@ class CommentService:
         return data
 
     @classmethod
-    async def create_comment(cls, **kwargs) -> Comment:
+    async def create_comment(cls, file: UploadFile, **kwargs) -> Comment:
+        if file:
+            path = f"{os.path.join(config.MEDIA_URL, file.filename)}"
+            with open(path, "wb") as buffer:
+                buffer.write(await file.read())
+            kwargs["image_url"] = path
+
         comment = Comment(**kwargs)
         session.add(comment)
         await session.commit()
@@ -42,8 +51,16 @@ class CommentService:
     async def update_comment(
             self,
             id: int,
+            file: UploadFile,
             **kwargs: dict,
     ) -> Comment:
+
+        if file:
+            path = f"{os.path.join(config.MEDIA_URL, file.filename)}"
+            with open(path, "wb") as buffer:
+                buffer.write(await file.read())
+            kwargs["image_url"] = path
+
         query = (
             update(Comment)
             .where(Comment.id == id)

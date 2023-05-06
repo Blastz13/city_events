@@ -3,7 +3,6 @@ from typing import List, Dict
 from sqlalchemy import select, update, func, DateTime
 import datetime
 
-from app.user.models import User
 from app.user.services import UserService
 from core.db import session
 from app.event.models import Event

@@ -14,7 +14,7 @@ class CacheManager:
         self.backend = backend
         self.key_maker = key_maker
 
-    def cached(self, prefix: str = None, tag: CacheTag = None, ttl: int = 60):
+    def cached(self, prefix: str | None = None, tag: CacheTag | None = None, ttl: int = 60):
         def _cached(function):
             @wraps(function)
             async def __cached(*args, **kwargs):
