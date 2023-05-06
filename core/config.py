@@ -8,6 +8,7 @@ class Config(BaseSettings):
     DEBUG: bool = True
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
+    MEDIA_URL: str = "./media"
     WRITER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/fastapi"
     READER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/fastapi"
     JWT_SECRET_KEY: str = "fastapi"
@@ -37,7 +38,7 @@ class LocalConfig(Config):
 
 
 class ProductionConfig(Config):
-    DEBUG: str = False
+    DEBUG: bool = False
     WRITER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/prod"
     READER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/prod"
 

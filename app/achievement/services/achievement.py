@@ -1,9 +1,12 @@
+import os
 from typing import List, Dict
 
+from fastapi import UploadFile
 from sqlalchemy import select, update
 
 from app.achievement.models import Achievement
 from app.user.models import User
+from core.config import config
 from core.db import session
 
 
@@ -32,8 +35,11 @@ class AchievementService:
         return achievement
 
     @classmethod
-    async def create_achievement(cls, **kwargs) -> Achievement:
-        achievement = Achievement(**kwargs)
+    async def create_achievement(cls, file: UploadFile, **kwargs: dict) -> Achievement:
+        path = f"{os.path.join(config.MEDIA_URL, file.filename)}"
+        with open(path, "wb") as buffer:
+            buffer.write(await file.read())
+        achievement = Achievement(image_url=path, **kwargs)
         session.add(achievement)
         await session.commit()
         await session.refresh(achievement)
@@ -42,8 +48,15 @@ class AchievementService:
     async def update_achievement(
             self,
             id: int,
+            file: UploadFile,
             **kwargs: dict,
     ) -> Achievement:
+        if file:
+            path = f"{os.path.join(config.MEDIA_URL, file.filename)}"
+            with open(path, "wb") as buffer:
+                buffer.write(await file.read())
+            kwargs["image_url"] = path
+
         query = (
             update(Achievement)
             .where(Achievement.id == id)
@@ -61,7 +74,7 @@ class AchievementService:
         await session.commit()
         return {}
 
-    async def assign_achievement(self, achievement_id: int, user_id) -> Achievement:
+    async def assign_achievement(self, achievement_id: int, user_id: int) -> Achievement:
         achievement = await self.get_achievement(achievement_id)
         user = await session.scalar(select(User).where(User.id == user_id))
         achievement.users.append(user)

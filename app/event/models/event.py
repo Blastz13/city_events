@@ -34,7 +34,7 @@ class Event(Base, TimestampMixin):
 
 
 @event.listens_for(Event, "after_insert")
-def index_document(_, __, target):
+def insert_index_document(_, __, target):
     logger.info(f"triggered event.after_insert update {target.id} in elastic")
     doc = {
         "title": target.title,
@@ -46,7 +46,7 @@ def index_document(_, __, target):
 
 
 @event.listens_for(Event, "after_update")
-def index_document(_, __, target):
+def update_index_document(_, __, target):
     logger.info(f"triggered event.after_insert update {target.id} in elastic")
     doc_update = {
         "doc": {
@@ -60,7 +60,7 @@ def index_document(_, __, target):
 
 
 @event.listens_for(Event, "after_delete")
-def index_document(_, __, target):
+def delete_index_document(_, __, target):
     logger.info(f"triggered event.after_delete update {target.id} in elastic")
     loop = asyncio.get_event_loop()
     loop.create_task(es_client.delete(index=ELASTICSEARCH_INDEX, id=target.id))
