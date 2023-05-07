@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
@@ -38,8 +39,12 @@ async def get_event_list(
     status_code=200
 )
 @Cache.cached(tag=CacheTag.GET_EVENTS_BY_QUERY, ttl=60)
-async def get_events_by_query(query: str = Query(...)):
-    return await EventService().get_events_by_query(query)
+async def get_events_by_query(query: str = Query(None),
+                              date_start: datetime.date = Query(None),
+                              date_end: datetime.date = Query(None),
+                              offset: int = Query(None),
+                              limit: int = Query(None)):
+    return await EventService().get_events_by_query(query, date_start, date_end, offset, limit)
 
 
 @event_router.get(

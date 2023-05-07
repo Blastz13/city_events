@@ -24,10 +24,32 @@ class EventService:
         return result.scalars().unique().all()
 
     @classmethod
-    async def get_events_by_query(cls, query: str) -> List[Event]:
-        if query:
-            results = await es_client.search(index=config.ELASTICSEARCH_INDEX, body={
-                "query": {
+    async def get_events_by_query(cls, query: str, date_start: datetime.date,
+                                  date_end: datetime.date, offset: int, limit: int) -> List[Event]:
+        elastic_query = {
+            "query": {
+                "bool": {
+
+                },
+            },
+            "sort": [
+                {"date_start": {"order": "desc"}}
+            ],
+            "from": offset,
+            "size": limit
+        }
+        if (date_start or date_end) and query:
+            elastic_query["query"]["bool"]["must"] = [
+                {
+                    "range": {
+                        "date_start": {
+                            "gte": date_start,
+                            "lte": date_end,
+                            "format": "yyyy-MM-dd",
+                        }
+                    }
+                },
+                {
                     "multi_match": {
                         "query": query,
                         "fields": ["title^2", "description"],
@@ -36,15 +58,38 @@ class EventService:
                         "type": "best_fields",
                         "operator": "or"
                     }
-                },
-                "sort": [
-                    {"date_start": {"order": "desc"}}
-                ]
-            })
-            event_ids = [int(result["_id"]) for result in results["hits"]["hits"]]
-            events = await session.scalars(select(Event).where(Event.id.in_(event_ids)))
+                }
+            ]
         else:
-            events = await session.scalars(select(Event))
+            elastic_query["query"]["bool"]["should"] = [
+                {
+                    "range": {
+                        "date_start": {
+                            "format": "yyyy-MM-dd",
+                        }
+                    }
+                },
+            ]
+
+            if date_start:
+                elastic_query["query"]["bool"]["should"][0]["range"]["date_start"]["gte"] = date_start
+            if date_end:
+                elastic_query["query"]["bool"]["should"][0]["range"]["date_start"]["lte"] = date_end
+            if query:
+                elastic_query["query"]["bool"]["should"].append({
+                    "multi_match": {
+                        "query": query,
+                        "fields": ["title^2", "description"],
+                        "fuzziness": "AUTO",
+                        "fuzzy_transpositions": True,
+                        "type": "best_fields",
+                        "operator": "or"
+                    }
+                })
+
+        results = await es_client.search(index=config.ELASTICSEARCH_INDEX, body=elastic_query)
+        event_ids = [int(result["_id"]) for result in results["hits"]["hits"]]
+        events = await session.scalars(select(Event).where(Event.id.in_(event_ids)))
         return events.unique().all()
 
     @classmethod
