@@ -1,0 +1,142 @@
+version: '3.7'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: ./docker/api/Dockerfile
+    command: uvicorn app.server:app --port 5050 --reload
+    container_name: api
+    hostname: api
+    ports:
+      - '8000:8000'
+    tty: true
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - elasticsearch
+      - mongo
+      - worker
+      - scheduler
+    volumes:
+      - $PWD:/var/www/
+    env_file:
+      - ../.env
+    networks:
+      - backend
+    restart: always
+
+  db:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: db
+    hostname: db
+    ports:
+      - "54322:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ../.env
+    networks:
+      - backend
+    restart: always
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    hostname: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+    restart: always
+
+  mongo:
+    image: mongo:6.0.5
+    container_name: mongo
+    hostname: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - backend
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3.8-management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    env_file:
+      - ../.env
+    networks:
+      - backend
+    restart: always
+
+  elasticsearch:
+    image: elasticsearch:7.17.9
+    container_name: elasticsearch
+    hostname: elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - backend
+    restart: always
+
+  worker:
+    build:
+      context: ..
+      dockerfile: ./docker/api/Dockerfile
+    container_name: worker
+    hostname: worker
+    command: celery -A celery_app.celery_app worker --loglevel=info
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - $PWD:/var/www/
+    networks:
+      - backend
+    restart: always
+
+  scheduler:
+    build:
+      context: ..
+      dockerfile: ./docker/api/Dockerfile
+    container_name: scheduler
+    hostname: scheduler
+    command: celery -A celery_app.celery_app beat --loglevel=info
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - $PWD:/var/www/
+    networks:
+      - backend
+    restart: always
+
+networks:
+  backend:
+    driver: 'bridge'
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  mongodb_data:
+  mongodb_config:
+  elasticsearch_data:

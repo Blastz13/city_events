@@ -1,15 +1,11 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
+FROM python:3.10-alpine3.17
 
-COPY . /home
-WORKDIR /home
-ENV ENV=dev
-RUN pip install "poetry==1.2.1"
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev
-ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+WORKDIR /var/www
 
-RUN chmod +x /home/docker/api/startup.sh
-ENTRYPOINT /home/docker/api/startup.sh
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+EXPOSE 8000
+COPY ./../ ./
+RUN pip3 install --no-cache-dir --upgrade -r /var/www/requirements.txt
+
+RUN #alembic upgrade head

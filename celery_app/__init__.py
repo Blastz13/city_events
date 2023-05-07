@@ -17,6 +17,6 @@ celery_app.conf.update(task_track_started=True)
 celery_app.conf.beat_schedule = {
     'run-every-30-minutes': {
         'task': 'send_notifications',
-        'schedule': crontab('/*30'),
+        'schedule': crontab(minute='*/30'),
     },
 }

@@ -1,46 +1,88 @@
 import os
 
 from pydantic import BaseSettings
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 
 class Config(BaseSettings):
-    ENV: str = "development"
-    DEBUG: bool = True
-    APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8000
-    MEDIA_URL: str = "./media"
-    WRITER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/fastapi"
-    READER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/fastapi"
-    JWT_SECRET_KEY: str = "fastapi"
-    JWT_ALGORITHM: str = "HS256"
+    ENV: str = os.getenv("ENV", "development")
+    DEBUG: bool = os.getenv("DEBUG", True)
+    APP_HOST: str = os.getenv("APP_HOST", "0.0.0.0")
+    APP_PORT: int = os.getenv("APP_PORT", 8000)
+    MEDIA_URL: str = os.getenv("MEDIA_URL", "./media")
+
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+
     SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
-    CELERY_BROKER_URL: str = "pyamqp://guest@localhost//"
-    CELERY_BACKEND_URL: str = "rpc://guest@localhost//"
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    SMTP_SERVER: str = ""
-    SMTP_PORT: int = None
-    SMTP_USERNAME: str = ""
-    SMTP_PASSWORD: str = ""
+
+    CELERY_BROKER_URL: str = f"pyamqp://{os.getenv('RABBITMQ_DEFAULT_USER')}:" \
+                             f"{os.getenv('RABBITMQ_DEFAULT_PASS')}@{os.getenv('RABBITMQ_HOST')}//"
+    CELERY_BACKEND_URL: str = f"rpc://{os.getenv('RABBITMQ_DEFAULT_USER')}:" \
+                              f"{os.getenv('RABBITMQ_DEFAULT_PASS')}@{os.getenv('RABBITMQ_HOST')}//"
+
+    MONGO_HOST: str = os.getenv("MONGO_HOST", "mongo")
+    MONGO_PORT: int = os.getenv("MONGO_PORT", 27017)
+
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "redis")
+    REDIS_PORT: int = os.getenv("REDIS_PORT", 6379)
+
+    ELASTICSEARCH_HOSTS: str = f"{os.getenv('ELASTICSEARCH_HOSTS', 'elasticsearch')}"
+    ELASTICSEARCH_PORT: str = f"{os.getenv('ELASTICSEARCH_PORT', 9200)}"
+    ELASTICSEARCH_INDEX: str = f"{os.getenv('ELASTICSEARCH_INDEX', 'events')}"
+
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "")
+    SMTP_PORT: int = os.getenv("SMTP_PORT", 0)
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
 
 
 class DevelopmentConfig(Config):
-    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi"
-    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi"
-    REDIS_HOST: str = "redis"
-    REDIS_PORT: int = 6379
+    WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_DEV')}:" \
+                         f"{os.getenv('POSTGRES_PASSWORD_DEV')}@" \
+                         f"{os.getenv('POSTGRES_HOST_DEV')}:" \
+                         f"{os.getenv('POSTGRES_PORT_DEV')}/{os.getenv('POSTGRES_DB_DEV')}"
+    READER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_DEV')}:" \
+                         f"{os.getenv('POSTGRES_PASSWORD_DEV')}@" \
+                         f"{os.getenv('POSTGRES_HOST_DEV')}:" \
+                         f"{os.getenv('POSTGRES_PORT_DEV')}/{os.getenv('POSTGRES_DB_DEV')}"
+    SYNC_WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_DEV')}:" \
+                              f"{os.getenv('POSTGRES_PASSWORD_DEV')}@" \
+                              f"{os.getenv('POSTGRES_HOST_DEV')}:" \
+                              f"{os.getenv('POSTGRES_PORT_DEV')}/{os.getenv('POSTGRES_DB_DEV')}"
 
 
 class LocalConfig(Config):
-    WRITER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:1/name_databas"
-    READER_DB_URL: str = f"postgresql+asyncpg://postgres:password@localhost:1/name_databas"
-    SYNC_WRITER_DB_URL: str = f"postgresql://postgres:password@localhost:1/name_databas"
+    WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_LOCAL')}:" \
+                         f"{os.getenv('POSTGRES_PASSWORD_LOCAL')}@" \
+                         f"{os.getenv('POSTGRES_HOST_LOCAL')}:" \
+                         f"{os.getenv('POSTGRES_PORT_LOCAL')}/{os.getenv('POSTGRES_DB_LOCAL')}"
+    READER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_LOCAL')}:" \
+                         f"{os.getenv('POSTGRES_PASSWORD_LOCAL')}@" \
+                         f"{os.getenv('POSTGRES_HOST_LOCAL')}:" \
+                         f"{os.getenv('POSTGRES_PORT_LOCAL')}/{os.getenv('POSTGRES_DB_LOCAL')}"
+    SYNC_WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_LOCAL')}:" \
+                              f"{os.getenv('POSTGRES_PASSWORD_LOCAL')}@" \
+                              f"{os.getenv('POSTGRES_HOST_LOCAL')}:" \
+                              f"{os.getenv('POSTGRES_PORT_LOCAL')}/{os.getenv('POSTGRES_DB_LOCAL')}"
 
 
 class ProductionConfig(Config):
     DEBUG: bool = False
-    WRITER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/prod"
-    READER_DB_URL: str = f"mysql+aiomysql://fastapi:fastapi@localhost:3306/prod"
+    WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_PROD')}:" \
+                         f"{os.getenv('POSTGRES_PASSWORD_PROD')}@" \
+                         f"{os.getenv('POSTGRES_HOST_PROD')}:" \
+                         f"{os.getenv('POSTGRES_PORT_PROD')}/{os.getenv('POSTGRES_DB_PROD')}"
+    READER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_PROD')}:" \
+                         f"{os.getenv('POSTGRES_PASSWORD_PROD')}@" \
+                         f"{os.getenv('POSTGRES_HOST_PROD')}:" \
+                         f"{os.getenv('POSTGRES_PORT_PROD')}/{os.getenv('POSTGRES_DB_PROD')}"
+    SYNC_WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_PROD')}:" \
+                              f"{os.getenv('POSTGRES_PASSWORD_PROD')}@" \
+                              f"{os.getenv('POSTGRES_HOST_PROD')}:" \
+                              f"{os.getenv('POSTGRES_PORT_PROD')}/{os.getenv('POSTGRES_DB_PROD')}"
 
 
 def get_config():

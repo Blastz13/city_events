@@ -39,7 +39,7 @@ async def elastic_healthcheck():
 @health_router.get("/redis", status_code=200)
 async def redis_healthcheck():
     try:
-        redis_client.ping()
+        await redis_client.ping()
         return {"message": "Redis is up"}
     except:
         return {"message": "Redis is down"}
