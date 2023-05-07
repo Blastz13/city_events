@@ -4,9 +4,10 @@ from sqlalchemy import select, update, func, DateTime
 import datetime
 
 from app.user.services import UserService
+from core.config import config
 from core.db import session
 from app.event.models import Event
-from core.db.elastic_db import es_client, ELASTICSEARCH_INDEX
+from core.db.elastic_db import es_client
 
 
 class EventService:
@@ -25,7 +26,7 @@ class EventService:
     @classmethod
     async def get_events_by_query(cls, query: str) -> List[Event]:
         if query:
-            results = await es_client.search(index=ELASTICSEARCH_INDEX, body={
+            results = await es_client.search(index=config.ELASTICSEARCH_INDEX, body={
                 "query": {
                     "multi_match": {
                         "query": query,

@@ -4,11 +4,12 @@ import logging
 from sqlalchemy import Column, BigInteger, Integer, String, Float, ForeignKey, TIMESTAMP, event
 from sqlalchemy.orm import relationship
 
+from core.config import config
 from core.db import Base
 from core.db.mixins import TimestampMixin
 from geoalchemy2 import Geometry
 from app.comment.models import Comment
-from core.db.elastic_db import es_client, ELASTICSEARCH_INDEX
+from core.db.elastic_db import es_client
 
 logger = logging.getLogger('app')
 
@@ -42,7 +43,7 @@ def insert_index_document(_, __, target):
         "date_start": target.date_start,
     }
     loop = asyncio.get_event_loop()
-    loop.create_task(es_client.index(index=ELASTICSEARCH_INDEX, id=target.id, body=doc))
+    loop.create_task(es_client.index(index=config.ELASTICSEARCH_INDEX, id=target.id, body=doc))
 
 
 @event.listens_for(Event, "after_update")
@@ -56,14 +57,14 @@ def update_index_document(_, __, target):
         }
     }
     loop = asyncio.get_event_loop()
-    loop.create_task(es_client.update(index=ELASTICSEARCH_INDEX, id=target.id, body=doc_update))
+    loop.create_task(es_client.update(index=config.ELASTICSEARCH_INDEX, id=target.id, body=doc_update))
 
 
 @event.listens_for(Event, "after_delete")
 def delete_index_document(_, __, target):
     logger.info(f"triggered event.after_delete update {target.id} in elastic")
     loop = asyncio.get_event_loop()
-    loop.create_task(es_client.delete(index=ELASTICSEARCH_INDEX, id=target.id))
+    loop.create_task(es_client.delete(index=config.ELASTICSEARCH_INDEX, id=target.id))
 
 
 class EventMembers(Base):

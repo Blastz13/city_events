@@ -32,7 +32,7 @@ html = """
         <ul id='messages'>
         </ul>
         <script>
-            var ws = new WebSocket("ws://0.0.0.0:8000/chat/ws/1/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE2ODI3ODMyNzF9.2pFcqRMV23toT7FHJl0gIPtLVHt8Fq9eeBLN2_qVyQ4");
+            var ws = new WebSocket("ws://0.0.0.0:8000/api/v1/chat/ws/1/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE2ODM0NzQ0Mjh9.aMO0pnnolIE8PxiVJtl2mHLJeH4JCEk-KGsjL-odtf0");
             ws.onmessage = function(event) {
                 var messages = document.getElementById('messages')
                 var message = document.createElement('li')
