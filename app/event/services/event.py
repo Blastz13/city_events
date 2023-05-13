@@ -8,6 +8,7 @@ from core.config import config
 from core.db import session
 from app.event.models import Event
 from core.db.elastic_db import es_client
+from core.exceptions import NotFoundException
 
 
 class EventService:
@@ -93,14 +94,18 @@ class EventService:
         return events.unique().all()
 
     @classmethod
-    async def get_event(cls, id: int) -> Event:
-        return await session.scalar(select(Event).where(Event.id == id))
+    async def get_event_or_404(cls, id: int) -> Event:
+        result = await session.execute(select(Event).where(Event.id == id))
+        instance = result.scalar()
+        if not instance:
+            raise NotFoundException
+        return instance
 
     @classmethod
     async def create_event(cls, **kwargs) -> Event:
         kwargs["geo"] = 'POINT({} {})'.format(kwargs["longitude"], kwargs["latitude"])
         user_id = kwargs.pop("user_id")
-        user = await UserService().get_user(user_id)
+        user = await UserService().get_user_or_404(user_id)
         event = Event(**kwargs)
         event.organizators.append(user)
         event.members.append(user)
@@ -110,8 +115,8 @@ class EventService:
         return event
 
     async def add_members_to_event(self, user_id: int, event_id: int) -> Event:
-        event = await self.get_event(event_id)
-        user = await UserService().get_user(user_id)
+        event = await self.get_event_or_404(event_id)
+        user = await UserService().get_user_or_404(user_id)
         event.members.append(user)
         session.add(event)
         await session.commit()
@@ -131,10 +136,10 @@ class EventService:
         )
         await session.execute(query)
         await session.commit()
-        return await self.get_event(id)
+        return await self.get_event_or_404(id)
 
     async def remove_event(self, id: int) -> Dict:
-        event = await self.get_event(id)
+        event = await self.get_event_or_404(id)
         await session.delete(event)
         await session.commit()
         return {}

@@ -5,9 +5,10 @@ from fastapi import UploadFile
 from sqlalchemy import select, update
 
 from app.achievement.models import Achievement
-from app.user.models import User
+from app.user.services import UserService
 from core.config import config
 from core.db import session
+from core.exceptions import NotFoundException
 
 
 class AchievementService:
@@ -29,10 +30,13 @@ class AchievementService:
         return result.scalars().unique().all()
 
     @classmethod
-    async def get_achievement(cls, id: int) -> Achievement:
-        achievement = await session.scalar(
+    async def get_achievement_or_404(cls, id: int) -> Achievement:
+        result = await session.scalar(
             select(Achievement).where(Achievement.id == id))
-        return achievement
+        instance = result.scalar()
+        if not instance:
+            raise NotFoundException
+        return instance
 
     @classmethod
     async def create_achievement(cls, file: UploadFile, **kwargs: dict) -> Achievement:
@@ -65,18 +69,17 @@ class AchievementService:
         )
         await session.execute(query)
         await session.commit()
-        return await self.get_achievement(id)
+        return await self.get_achievement_or_404(id)
 
-    @classmethod
-    async def remove_achievement(cls, id: int) -> Dict:
-        achievement = await session.scalar(select(Achievement).where(Achievement.id == id))
+    async def remove_achievement(self, id: int) -> Dict:
+        achievement = await self.get_achievement_or_404(id)
         await session.delete(achievement)
         await session.commit()
         return {}
 
     async def assign_achievement(self, achievement_id: int, user_id: int) -> Achievement:
-        achievement = await self.get_achievement(achievement_id)
-        user = await session.scalar(select(User).where(User.id == user_id))
+        achievement = await self.get_achievement_or_404(achievement_id)
+        user = await UserService().get_user_or_404(user_id)
         achievement.users.append(user)
         session.add(achievement)
         await session.commit()

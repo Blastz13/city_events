@@ -24,6 +24,7 @@ user_router = APIRouter()
     response_model=List[GetUserListResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([IsAdmin]))],
+    status_code=200
 )
 async def get_user_list(
         limit: int = Query(10, description="Limit"),
@@ -37,6 +38,7 @@ async def get_user_list(
     "",
     response_model=CreateUserResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
+    status_code=201
 )
 async def create_user(request: CreateUserRequestSchema):
     await UserService().create_user(**request.dict())
@@ -47,16 +49,18 @@ async def create_user(request: CreateUserRequestSchema):
     "/login",
     response_model=LoginResponse,
     responses={"404": {"model": ExceptionResponseSchema}},
+    status_code=201
 )
 async def login(request: LoginRequest):
     token = await UserService().login(email=request.email, password=request.password)
     return {"token": token.token, "refresh_token": token.refresh_token}
 
 
-@user_router.post(
+@user_router.get(
     "/{user_id}",
     response_model=GetUserResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
+    status_code=200
 )
 async def get_user(user_id: int):
-    return await UserService().get_user(user_id=user_id)
+    return await UserService().get_user_or_404(user_id=user_id)

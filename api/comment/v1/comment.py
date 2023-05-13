@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, UploadFile, File
 from starlette.requests import Request
 
+from app.comment.models import Comment
 from app.comment.schemas import CommentRequestSchema, CommentResponseSchema
 from app.comment.services import CommentService
 from app.user.schemas import ExceptionResponseSchema
@@ -15,7 +16,7 @@ comment_router = APIRouter()
     "/event/{event_id}",
     response_model=List[CommentResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    # dependencies=[Depends(PermissionDependency([IsAdmin]))],
+    status_code=200
 )
 async def get_comment_list(
         event_id: int,
@@ -28,10 +29,10 @@ async def get_comment_list(
     "/{comment_id}",
     response_model=CommentResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    # dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    status_code=200
 )
 async def get_comment(comment_id: int):
-    return await CommentService().get_comment(comment_id)
+    return await CommentService().get_comment_or_404(comment_id)
 
 
 @comment_router.post(
@@ -39,6 +40,7 @@ async def get_comment(comment_id: int):
     response_model=CommentResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    status_code=201
 )
 async def create_comment(request: Request, event_id: int, comment: CommentRequestSchema,
                          file: Optional[UploadFile] = File(None)):
@@ -49,18 +51,18 @@ async def create_comment(request: Request, event_id: int, comment: CommentReques
     "/{comment_id}",
     response_model=CommentResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    status_code=201,
-    # dependencies=[Depends(IsOwnerDependency(Comment))],
+    dependencies=[Depends(IsOwnerDependency(Comment, "user_id"))],
+    status_code=200
 )
-async def update_comment(comment_id: int, comment: CommentRequestSchema, file: Optional[UploadFile] = File(None)):
-    return await CommentService().update_comment(comment_id, file, **comment.dict())
+async def update_comment(id: int, comment: CommentRequestSchema, file: Optional[UploadFile] = File(None)):
+    return await CommentService().update_comment(id, file, **comment.dict())
 
 
 @comment_router.delete(
     "/{comment_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
-    status_code=204,
-    # dependencies=[Depends(IsOwnerDependency())],
+    dependencies=[Depends(IsOwnerDependency(Comment, "user_id"))],
+    status_code=204
 )
-async def remove_comment(comment_id: int):
-    return await CommentService().remove_comment(comment_id)
+async def remove_comment(id: int):
+    return await CommentService().remove_comment(id)

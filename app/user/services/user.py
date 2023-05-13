@@ -8,7 +8,7 @@ from core.db import Transactional, session
 from core.exceptions import (
     PasswordDoesNotMatchException,
     DuplicateEmailOrNicknameException,
-    UserNotFoundException,
+    UserNotFoundException, NotFoundException,
 )
 from core.utils.token_helper import TokenHelper
 
@@ -34,11 +34,16 @@ class UserService:
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def get_user(
+    async def get_user_or_404(
         self,
         user_id: int,
     ) -> User:
-        return await session.scalar(select(User).where(User.id == user_id))
+
+        result = await session.execute(select(User).where(User.id == user_id))
+        instance = result.scalar()
+        if not instance:
+            raise NotFoundException
+        return instance
 
     @Transactional()
     async def create_user(
@@ -64,7 +69,6 @@ class UserService:
 
         if user.is_admin is False:
             return False
-
         return True
 
     async def login(self, email: str, password: str) -> LoginResponseSchema:
