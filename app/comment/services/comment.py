@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.comment.models import Comment
 from core.config import config
 from core.db import session
+from core.exceptions import NotFoundException
 
 
 class CommentService:
@@ -30,9 +31,12 @@ class CommentService:
         return result.scalars().unique().all()
 
     @classmethod
-    async def get_comment(cls, id: int) -> Comment:
-        data = await session.scalar(select(Comment).options(selectinload(Comment.event)).where(Comment.id == id))
-        return data
+    async def get_comment_or_404(cls, id: int) -> Comment:
+        result = await session.execute(select(Comment).options(selectinload(Comment.event)).where(Comment.id == id))
+        instance = result.scalar()
+        if not instance:
+            raise NotFoundException
+        return instance
 
     @classmethod
     async def create_comment(cls, file: UploadFile, **kwargs) -> Comment:
@@ -69,11 +73,10 @@ class CommentService:
         )
         await session.execute(query)
         await session.commit()
-        return await self.get_comment(id)
+        return await self.get_comment_or_404(id)
 
-    @classmethod
-    async def remove_comment(cls, id: int) -> Dict:
-        event = await session.scalar(select(Comment).where(Comment.id == id))
-        await session.delete(event)
+    async def remove_comment(self, id: int) -> Dict:
+        comment = await self.get_comment_or_404(id)
+        await session.delete(comment)
         await session.commit()
         return {}

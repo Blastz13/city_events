@@ -57,8 +57,9 @@ class PermissionDependency(SecurityBase):
 
 
 class IsOwnerDependency(SecurityBase):
-    def __init__(self, obj):
+    def __init__(self, obj, attr):
         self.obj = obj
+        self.attr = attr
         self.model: APIKey = APIKey(**{"in": APIKeyIn.header}, name="Authorization")
         self.scheme_name = self.__class__.__name__
 
@@ -66,6 +67,10 @@ class IsOwnerDependency(SecurityBase):
         if request.user.id is None:
             return False
 
-        event = await session.scalar(select(self.obj).where(self.obj.id == id))
         user = await session.scalar(select(User).where(User.id == request.user.id))
-        return user in event.organizators
+        obj = await session.scalar(select(self.obj).where(self.obj.id == id))
+
+        attr = getattr(obj, self.attr)
+        if isinstance(attr, int):
+            return user == self.attr
+        return user in getattr(obj, self.attr)

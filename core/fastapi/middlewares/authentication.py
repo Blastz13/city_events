@@ -29,7 +29,6 @@ class AuthBackend(AuthenticationBackend):
 
         if not credentials:
             return False, current_user
-
         try:
             payload = jwt.decode(
                 credentials,

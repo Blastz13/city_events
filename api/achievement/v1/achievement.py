@@ -1,10 +1,13 @@
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Query, UploadFile, File
+from fastapi import APIRouter, Query, UploadFile, File, Depends
 
+from app.achievement.models import Achievement
 from app.achievement.schemas import AchievementRequestSchema, AchievementResponseSchema, AssignAchievementRequestSchema
 from app.achievement.services import AchievementService
 from app.user.schemas import ExceptionResponseSchema
+from core.fastapi.dependencies import PermissionDependency, IsAuthenticated
+from core.fastapi.dependencies.permission import IsOwnerDependency
 
 achievement_router = APIRouter()
 
@@ -13,7 +16,6 @@ achievement_router = APIRouter()
     "",
     response_model=List[AchievementResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    # dependencies=[Depends(PermissionDependency([IsAdmin]))],
     status_code=200
 )
 async def get_achievement_list(
@@ -26,18 +28,17 @@ async def get_achievement_list(
     "/{achievement_id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    # dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=200
 )
 async def get_achievement(achievement_id: int):
-    return await AchievementService().get_achievement(achievement_id)
+    return await AchievementService().get_achievement_or_404(achievement_id)
 
 
 @achievement_router.post(
     "/",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    # dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
 )
 async def create_achievement(achievement: AchievementRequestSchema, file: UploadFile = File(...)):
@@ -48,29 +49,30 @@ async def create_achievement(achievement: AchievementRequestSchema, file: Upload
     "/{achievement_id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    status_code=200,
-    # dependencies=[Depends(IsOwnerDependency(Comment))],
+    dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
+    status_code=200
 )
-async def update_achievement(achievement_id: int, achievement: AchievementRequestSchema, file: UploadFile = File(...)):
-    return await AchievementService().update_achievement(achievement_id, file, **achievement.dict())
+async def update_achievement(id: int, achievement: AchievementRequestSchema, file: Optional[UploadFile] = File(None)):
+    return await AchievementService().update_achievement(id, file, **achievement.dict())
 
 
 @achievement_router.delete(
     "/{achievement_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
-    status_code=204,
-    # dependencies=[Depends(IsOwnerDependency())],
+    dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
+    status_code=204
+
 )
-async def remove_achievement(achievement_id: int):
-    return await AchievementService().remove_achievement(achievement_id)
+async def remove_achievement(id: int):
+    return await AchievementService().remove_achievement(id)
 
 
 @achievement_router.post(
     "/{achievement_id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    status_code=201,
-    # dependencies=[Depends(IsOwnerDependency())],
+    dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
+    status_code=201
 )
-async def assign_achievement(achievement_id: int, assign: AssignAchievementRequestSchema):
-    return await AchievementService().assign_achievement(achievement_id, **assign.dict())
+async def assign_achievement(id: int, assign: AssignAchievementRequestSchema):
+    return await AchievementService().assign_achievement(id, **assign.dict())
