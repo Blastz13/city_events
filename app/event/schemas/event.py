@@ -34,6 +34,15 @@ class CreateEventResponseSchema(BaseModel):
     rating: int = Field(..., description="Rating")
     organizators: List[CreateUserResponseSchema]
     members: List[CreateUserResponseSchema]
+    location: str = Field(..., description="location")
+
+    class Config:
+        orm_mode = True
+
+
+class ResponseEventSubscribeSchema(BaseModel):
+    user_id: int = Field(..., description="user_id")
+    event_id: int = Field(..., description="event_id")
 
     class Config:
         orm_mode = True
