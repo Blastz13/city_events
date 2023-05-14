@@ -20,6 +20,12 @@ class CreateUserRequestSchema(BaseModel):
     username: str = Field(..., description="Nickname")
 
 
+class UpdateUserRequestSchema(BaseModel):
+    email: str = Field(..., description="Email")
+    password: str = Field(..., description="Password")
+    username: str = Field(..., description="Nickname")
+
+
 class CreateUserResponseSchema(BaseModel):
     email: str = Field(..., description="Email")
     username: str = Field(..., description="Nickname")

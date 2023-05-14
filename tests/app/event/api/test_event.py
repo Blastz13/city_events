@@ -2,9 +2,12 @@ import datetime
 
 import pytest
 
-from app.event.services import EventService
+from core.db.session import session
 from core.exceptions import NotFoundException
 from tests.factories import EventModelFactory
+
+from app.event.models import EventOrganizators
+from app.event.services import EventService
 
 
 @pytest.mark.asyncio
@@ -63,9 +66,19 @@ async def test_add_auth_member_to_event_limit(client_auth):
 
 
 @pytest.mark.asyncio
-async def test_delete_achievement(client_auth):
+async def test_delete_event(client_auth, init_user):
     event = EventModelFactory()
+    session.add(EventOrganizators(user_id=init_user[0].id, event_id=event.id))
+    await session.commit()
+
     response = await client_auth.delete(f"/api/v1/events/{event.id}")
     assert response.status_code == 204
     with pytest.raises(NotFoundException):
         await EventService().get_event_or_404(event.id)
+
+
+@pytest.mark.asyncio
+async def test_delete_event_forbidden_user(client_auth, init_user):
+    event = EventModelFactory()
+    response = await client_auth.delete(f"/api/v1/events/{event.id}")
+    assert response.status_code == 403
