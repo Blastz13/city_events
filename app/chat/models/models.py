@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
 from core.db.mixins import TimestampMixin
-from db import Base
+from core.db import Base
 
 
 class ChatRoom(Base, TimestampMixin):

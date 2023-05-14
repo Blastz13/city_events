@@ -48,7 +48,7 @@ class DevelopmentConfig(Config):
                          f"{os.getenv('POSTGRES_PASSWORD_DEV')}@" \
                          f"{os.getenv('POSTGRES_HOST_DEV')}:" \
                          f"{os.getenv('POSTGRES_PORT_DEV')}/{os.getenv('POSTGRES_DB_DEV')}"
-    SYNC_WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_DEV')}:" \
+    SYNC_WRITER_DB_URL: str = f"postgresql://{os.getenv('POSTGRES_USER_DEV')}:" \
                               f"{os.getenv('POSTGRES_PASSWORD_DEV')}@" \
                               f"{os.getenv('POSTGRES_HOST_DEV')}:" \
                               f"{os.getenv('POSTGRES_PORT_DEV')}/{os.getenv('POSTGRES_DB_DEV')}"
@@ -63,10 +63,26 @@ class LocalConfig(Config):
                          f"{os.getenv('POSTGRES_PASSWORD_LOCAL')}@" \
                          f"{os.getenv('POSTGRES_HOST_LOCAL')}:" \
                          f"{os.getenv('POSTGRES_PORT_LOCAL')}/{os.getenv('POSTGRES_DB_LOCAL')}"
-    SYNC_WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_LOCAL')}:" \
+    SYNC_WRITER_DB_URL: str = f"postgresql://{os.getenv('POSTGRES_USER_LOCAL')}:" \
                               f"{os.getenv('POSTGRES_PASSWORD_LOCAL')}@" \
                               f"{os.getenv('POSTGRES_HOST_LOCAL')}:" \
                               f"{os.getenv('POSTGRES_PORT_LOCAL')}/{os.getenv('POSTGRES_DB_LOCAL')}"
+
+
+class TestConfig(Config):
+    TESTING: bool = True
+    WRITER_DB_URL = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_TEST')}:" \
+                    f"{os.getenv('POSTGRES_PASSWORD_TEST')}@" \
+                    f"{os.getenv('POSTGRES_HOST_TEST')}:" \
+                    f"{os.getenv('POSTGRES_PORT_TEST')}/{os.getenv('POSTGRES_DB_TEST')}"
+    READER_DB_URL = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_TEST')}:" \
+                    f"{os.getenv('POSTGRES_PASSWORD_TEST')}@" \
+                    f"{os.getenv('POSTGRES_HOST_TEST')}:" \
+                    f"{os.getenv('POSTGRES_PORT_TEST')}/{os.getenv('POSTGRES_DB_TEST')}"
+    SYNC_WRITER_DB_URL: str = f"postgresql://{os.getenv('POSTGRES_USER_TEST')}:" \
+                              f"{os.getenv('POSTGRES_PASSWORD_TEST')}@" \
+                              f"{os.getenv('POSTGRES_HOST_TEST')}:" \
+                              f"{os.getenv('POSTGRES_PORT_TEST')}/{os.getenv('POSTGRES_DB_TEST')}"
 
 
 class ProductionConfig(Config):
@@ -79,7 +95,7 @@ class ProductionConfig(Config):
                          f"{os.getenv('POSTGRES_PASSWORD_PROD')}@" \
                          f"{os.getenv('POSTGRES_HOST_PROD')}:" \
                          f"{os.getenv('POSTGRES_PORT_PROD')}/{os.getenv('POSTGRES_DB_PROD')}"
-    SYNC_WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER_PROD')}:" \
+    SYNC_WRITER_DB_URL: str = f"postgresql://{os.getenv('POSTGRES_USER_PROD')}:" \
                               f"{os.getenv('POSTGRES_PASSWORD_PROD')}@" \
                               f"{os.getenv('POSTGRES_HOST_PROD')}:" \
                               f"{os.getenv('POSTGRES_PORT_PROD')}/{os.getenv('POSTGRES_DB_PROD')}"
@@ -91,6 +107,7 @@ def get_config():
         "dev": DevelopmentConfig(),
         "local": LocalConfig(),
         "prod": ProductionConfig(),
+        "test": TestConfig(),
     }
     return config_type[env]
 

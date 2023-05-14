@@ -34,7 +34,6 @@ class IsAdmin(BasePermission):
         user_id = request.user.id
         if not user_id:
             return False
-
         return await UserService().is_admin(user_id=user_id)
 
 
@@ -65,7 +64,7 @@ class IsOwnerDependency(SecurityBase):
 
     async def __call__(self, request: Request, id: int):
         if request.user.id is None:
-            return False
+            raise UnauthorizedException
 
         user = await session.scalar(select(User).where(User.id == request.user.id))
         obj = await session.scalar(select(self.obj).where(self.obj.id == id))

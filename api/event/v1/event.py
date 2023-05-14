@@ -96,6 +96,7 @@ async def create_event(request: Request, event: CreateEventRequestSchema):
     "/{event_id}/invite",
     response_model=CreateEventResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
 )
 async def add_member_to_event(event_id: int, request: Request):
@@ -103,7 +104,7 @@ async def add_member_to_event(event_id: int, request: Request):
 
 
 @event_router.put(
-    "/{event_id}",
+    "/{id}",
     response_model=CreateEventResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(IsOwnerDependency(Event, "organizators"))],
@@ -114,7 +115,7 @@ async def update_event(id: int, event: CreateEventRequestSchema):
 
 
 @event_router.delete(
-    "/{event_id}",
+    "/{id}",
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(IsOwnerDependency(Event, "organizators"))],
     status_code=204
