@@ -1,3 +1,4 @@
+import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -5,6 +6,8 @@ from email.utils import COMMASPACE
 from typing import List
 
 from core.config import config
+
+logger = logging.getLogger("app")
 
 
 class EmailSender:
@@ -30,7 +33,7 @@ class EmailSender:
             server.sendmail(self.SMTP_USERNAME, recipients, msg.as_string())
             server.quit()
         except Exception as ex:
-            ...
+            logger.error(f"Error send email: {ex}")
 
     def join_recipients(self, recipients: str | List[str]) -> str:
         if isinstance(recipients, list):

@@ -2,8 +2,11 @@ from fastapi import APIRouter, Response, Depends
 
 from core.fastapi.dependencies import PermissionDependency, AllowAll
 from core.helpers.redis import redis_client
+import logging
 
 health_router = APIRouter(prefix="/health", tags=["Health"])
+
+logger = logging.getLogger("app")
 
 
 @health_router.get("/", dependencies=[Depends(PermissionDependency([AllowAll]))])
@@ -22,7 +25,8 @@ async def mongo_healthcheck():
     try:
         client.admin.command('ping')
         return {"message": "MongoDB is up"}
-    except:
+    except Exception as ex:
+        logger.error(ex)
         return {"message": "MongoDB is down"}
 
 
@@ -32,7 +36,8 @@ async def elastic_healthcheck():
     try:
         await es_client.ping()
         return {"message": "Elasticsearch is up"}
-    except:
+    except Exception as ex:
+        logger.error(ex)
         return {"message": "Elasticsearch is down"}
 
 
@@ -41,5 +46,6 @@ async def redis_healthcheck():
     try:
         await redis_client.ping()
         return {"message": "Redis is up"}
-    except:
+    except Exception as ex:
+        logger.error(ex)
         return {"message": "Redis is down"}

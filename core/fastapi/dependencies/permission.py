@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from app.user.models import User
 from app.user.services import UserService
-from core.exceptions import CustomException, UnauthorizedException
+from core.exceptions import CustomException, UnauthorizedException, ForbiddenException
 from core.db import session
 
 
@@ -68,8 +68,6 @@ class IsOwnerDependency(SecurityBase):
 
         user = await session.scalar(select(User).where(User.id == request.user.id))
         obj = await session.scalar(select(self.obj).where(self.obj.id == id))
-
         attr = getattr(obj, self.attr)
-        if isinstance(attr, int):
-            return user == self.attr
-        return user in getattr(obj, self.attr)
+        if isinstance(attr, int) and not (user == self.attr) or user not in getattr(obj, self.attr):
+            raise ForbiddenException

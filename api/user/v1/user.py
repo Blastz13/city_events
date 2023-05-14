@@ -4,17 +4,19 @@ from fastapi import APIRouter, Depends, Query
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
+from app.user.models import User
 from app.user.schemas import (
     ExceptionResponseSchema,
     GetUserListResponseSchema,
     CreateUserRequestSchema,
-    CreateUserResponseSchema, GetUserResponseSchema,
+    CreateUserResponseSchema, GetUserResponseSchema, UpdateUserRequestSchema,
 )
 from app.user.services import UserService
 from core.fastapi.dependencies import (
     PermissionDependency,
     IsAdmin,
 )
+from core.fastapi.dependencies.permission import IsOwnerDependency
 
 user_router = APIRouter()
 
@@ -64,3 +66,14 @@ async def login(request: LoginRequest):
 )
 async def get_user(user_id: int):
     return await UserService().get_user_or_404(user_id=user_id)
+
+
+@user_router.put(
+    "/{id}",
+    response_model=GetUserResponseSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(IsOwnerDependency(User, "id"))],
+    status_code=200
+)
+async def update_user(id: int, user: UpdateUserRequestSchema):
+    return await UserService().update_by_id(id, **user.dict())

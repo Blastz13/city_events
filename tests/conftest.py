@@ -15,7 +15,7 @@ async def client():
 @pytest.fixture(scope="session")
 async def client_auth(init_user):
     async with AsyncClient(app=app, base_url="http://localhost") as client:
-        client.headers["Authorization"] = f'Bearer {init_user.token}'
+        client.headers["Authorization"] = f'Bearer {init_user[1].token}'
         yield client
 
 
@@ -35,8 +35,9 @@ def init_db():
 
 @pytest.fixture(scope="session", autouse=True)
 async def init_user():
-    await UserService().create_user(email="test@mail.ru", password1="pass", password2="pass", username="test")
-    return await UserService().login(email="test@mail.ru", password="pass")
+    user = await UserService().create_user(email="test@mail.ru", password1="pass", password2="pass", username="test")
+    credentials = await UserService().login(email="test@mail.ru", password="pass")
+    return user, credentials
 
 
 @pytest.fixture()

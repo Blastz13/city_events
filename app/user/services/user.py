@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from sqlalchemy import or_, select, and_
+from sqlalchemy import or_, select, update
 
 from app.user.models import User
 from app.user.schemas.user import LoginResponseSchema
@@ -10,6 +10,7 @@ from core.exceptions import (
     DuplicateEmailOrNicknameException,
     UserNotFoundException, NotFoundException,
 )
+from core.utils.password_hasher import Hasher
 from core.utils.token_helper import TokenHelper
 
 
@@ -18,9 +19,9 @@ class UserService:
         ...
 
     async def get_user_list(
-        self,
-        limit: int = 12,
-        prev: Optional[int] = None,
+            self,
+            limit: int = 12,
+            prev: Optional[int] = None,
     ) -> List[User]:
         query = select(User)
 
@@ -35,8 +36,8 @@ class UserService:
         return result.scalars().unique().all()
 
     async def get_user_or_404(
-        self,
-        user_id: int,
+            self,
+            user_id: int,
     ) -> User:
 
         result = await session.execute(select(User).where(User.id == user_id))
@@ -47,7 +48,7 @@ class UserService:
 
     @Transactional()
     async def create_user(
-        self, email: str, password1: str, password2: str, username: str
+            self, email: str, password1: str, password2: str, username: str
     ) -> None:
         if password1 != password2:
             raise PasswordDoesNotMatchException
@@ -58,8 +59,25 @@ class UserService:
         if is_exist:
             raise DuplicateEmailOrNicknameException
 
-        user = User(email=email, password=password1, username=username)
+        user = User(email=email, password=Hasher.get_password_hash(password1), username=username)
         session.add(user)
+        return user
+
+    async def update_by_id(
+            self,
+            id: int,
+            **kwargs: dict,
+    ) -> User:
+        kwargs["password"] = Hasher.get_password_hash(kwargs["password"])
+        query = (
+            update(User)
+            .where(User.id == id)
+            .values(**kwargs)
+            .execution_options(synchronize_session='fetch')
+        )
+        await session.execute(query)
+        await session.commit()
+        return await self.get_user_or_404(id)
 
     async def is_admin(self, user_id: int) -> bool:
         result = await session.execute(select(User).where(User.id == user_id))
@@ -69,14 +87,15 @@ class UserService:
 
         if user.is_admin is False:
             return False
-
         return True
 
     async def login(self, email: str, password: str) -> LoginResponseSchema:
         result = await session.execute(
-            select(User).where(and_(User.email == email, password == password))
+            select(User).where(User.email == email)
         )
         user = result.scalars().first()
+        if not Hasher.verify_password(password, user.password):
+            raise PasswordDoesNotMatchException
         if not user:
             raise UserNotFoundException
 
