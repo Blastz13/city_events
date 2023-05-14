@@ -18,7 +18,7 @@ class Event(Base, TimestampMixin):
     __tablename__ = "events"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    title = Column(String(255), nullable=False, db_index=True)
+    title = Column(String(255), nullable=False, index=True)
     description = Column(String(255), nullable=False)
     link = Column(String(255))
     date_start = Column(TIMESTAMP(timezone=True))

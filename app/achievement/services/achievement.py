@@ -31,7 +31,7 @@ class AchievementService:
 
     @classmethod
     async def get_achievement_or_404(cls, id: int) -> Achievement:
-        result = await session.scalar(
+        result = await session.execute(
             select(Achievement).where(Achievement.id == id))
         instance = result.scalar()
         if not instance:

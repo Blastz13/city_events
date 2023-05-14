@@ -40,7 +40,7 @@ class GetUserResponseSchema(BaseModel):
     email: str = Field(..., description="Email")
     username: str = Field(..., description="Nickname")
     rating: int = Field(..., description="Rating")
-    achievements: List[AchievementRequestSchema]  # TODO
+    achievements: List[AchievementRequestSchema]
 
     class Config:
         orm_mode = True

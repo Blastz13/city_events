@@ -1,6 +1,7 @@
 from sqlalchemy import Column, BigInteger, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
+from app.user.models import User
 from core.db import Base
 from core.db.mixins import TimestampMixin
 
@@ -10,7 +11,7 @@ class Achievement(Base, TimestampMixin):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     title = Column(String, nullable=False)
-    users = relationship('User', secondary='achievement_users', back_populates='achievements', lazy='joined')
+    users = relationship(User, secondary='achievement_users', back_populates='achievements', lazy='joined')
     image_url = Column(String)
 
 

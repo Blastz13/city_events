@@ -46,7 +46,7 @@ async def create_achievement(achievement: AchievementRequestSchema, file: Upload
 
 
 @achievement_router.put(
-    "/{achievement_id}",
+    "/{id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
@@ -57,7 +57,7 @@ async def update_achievement(id: int, achievement: AchievementRequestSchema, fil
 
 
 @achievement_router.delete(
-    "/{achievement_id}",
+    "/{id}",
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
     status_code=204
@@ -68,7 +68,7 @@ async def remove_achievement(id: int):
 
 
 @achievement_router.post(
-    "/{achievement_id}",
+    "/{id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],

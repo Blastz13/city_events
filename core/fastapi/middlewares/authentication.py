@@ -19,14 +19,12 @@ class AuthBackend(AuthenticationBackend):
         authorization: str = conn.headers.get("Authorization")
         if not authorization:
             return False, current_user
-
         try:
             scheme, credentials = authorization.split(" ")
             if scheme.lower() != "bearer":
                 return False, current_user
         except ValueError:
             return False, current_user
-
         if not credentials:
             return False, current_user
         try:

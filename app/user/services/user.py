@@ -32,7 +32,7 @@ class UserService:
 
         query = query.limit(limit)
         result = await session.execute(query)
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_user_or_404(
         self,
@@ -69,6 +69,7 @@ class UserService:
 
         if user.is_admin is False:
             return False
+
         return True
 
     async def login(self, email: str, password: str) -> LoginResponseSchema:

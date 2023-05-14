@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from sqlalchemy import select, update, func, DateTime
+from sqlalchemy import select, update, func, DateTime, or_
 import datetime
 
 from app.user.services import UserService
@@ -8,7 +8,7 @@ from core.config import config
 from core.db import session
 from app.event.models import Event
 from core.db.elastic_db import es_client
-from core.exceptions import NotFoundException
+from core.exceptions import NotFoundException, BadRequestException
 
 
 class EventService:
@@ -116,12 +116,14 @@ class EventService:
 
     async def add_members_to_event(self, user_id: int, event_id: int) -> Event:
         event = await self.get_event_or_404(event_id)
-        user = await UserService().get_user_or_404(user_id)
-        event.members.append(user)
-        session.add(event)
-        await session.commit()
-        await session.refresh(event)
-        return event
+        if len(event.members) < event.limit_member:
+            user = await UserService().get_user_or_404(user_id)
+            event.members.append(user)
+            session.add(event)
+            await session.commit()
+            await session.refresh(event)
+            return event
+        raise BadRequestException
 
     async def update_by_id(
             self,
@@ -157,7 +159,7 @@ class EventService:
     @classmethod
     async def get_upcoming_events(cls) -> List[Event]:
         events = await session.scalars(
-            select(Event).where(func.coalesce(Event.date_start).cast(DateTime) > datetime.datetime.now(),
+            select(Event).where(or_(func.coalesce(Event.date_start).cast(DateTime) > datetime.datetime.now(),
                                 func.coalesce(Event.date_start).cast(DateTime) <= datetime.datetime.now()
-                                + datetime.timedelta(minutes=30)).order_by(Event.date_start))
+                                + datetime.timedelta(minutes=30))).order_by(Event.date_start))
         return events.unique().all()
