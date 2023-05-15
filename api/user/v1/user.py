@@ -1,22 +1,24 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
+from starlette.requests import Request
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
-from app.user.models import User
+from app.user.models import User, UserRating
 from app.user.schemas import (
     ExceptionResponseSchema,
     GetUserListResponseSchema,
     CreateUserRequestSchema,
-    CreateUserResponseSchema, GetUserResponseSchema, UpdateUserRequestSchema,
+    CreateUserResponseSchema, GetUserResponseSchema, UpdateUserRequestSchema, RateUserRequestSchema,
+    RateUserResponseSchema,
 )
 from app.user.services import UserService
 from core.fastapi.dependencies import (
     PermissionDependency,
     IsAdmin,
 )
-from core.fastapi.dependencies.permission import IsOwnerDependency
+from core.fastapi.dependencies.permission import IsOwnerDependency, IsAuthenticated
 
 user_router = APIRouter()
 
@@ -66,6 +68,38 @@ async def login(request: LoginRequest):
 )
 async def get_user(user_id: int):
     return await UserService().get_user_or_404(user_id=user_id)
+
+
+@user_router.post(
+    "/rate",
+    response_model=RateUserResponseSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    status_code=201
+)
+async def rate_user(request: Request, rate: RateUserRequestSchema):
+    return await UserService().add_user_rating(user_id=request.user.id, **rate.dict())
+
+
+@user_router.post(
+    "/rate",
+    response_model=RateUserResponseSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    status_code=201
+)
+async def add_rate_user(request: Request, rate: RateUserRequestSchema):
+    return await UserService().add_user_rating(user_id=request.user.id, **rate.dict())
+
+
+@user_router.delete(
+    "/{id}/rate",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(IsOwnerDependency(UserRating, "user_id"))],
+    status_code=200
+)
+async def remove_rate_user(id: int):
+    return await UserService().remove_user_rating(id)
 
 
 @user_router.put(

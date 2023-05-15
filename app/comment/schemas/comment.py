@@ -2,7 +2,6 @@ import json
 
 from pydantic import BaseModel, Field
 
-from app.event.schemas import GetEventResponseSchema
 from app.user.schemas import CreateUserResponseSchema
 
 
@@ -23,7 +22,6 @@ class CommentResponseSchema(BaseModel):
     rating: int = Field(..., description="rating")
     comment: str = Field(..., description="comment")
     user: CreateUserResponseSchema = Field(..., description="user")
-    event: GetEventResponseSchema = Field(..., description="event")
     likes: int = Field(..., description="likes")
     image_url: str | None = Field(..., description="image_url")
 
@@ -33,6 +31,7 @@ class CommentResponseSchema(BaseModel):
 
 class CommentRequestSchema(Base):
     comment: str = Field(..., description="comment")
+    rating: int = Field(..., description="rating")
 
     class Config:
         orm_mode = True

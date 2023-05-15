@@ -1,7 +1,9 @@
 import datetime
-from typing import List
+from typing import List, Dict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator
+
+from app.comment.schemas import CommentResponseSchema
 from app.user.schemas import CreateUserResponseSchema
 
 
@@ -11,6 +13,15 @@ class GetEventResponseSchema(BaseModel):
     description: str = Field(..., description="Description")
     rating: int = Field(..., description="Rating")
     date_start: datetime.datetime = Field(..., description="date_start")
+    comments: List[CommentResponseSchema] = Field(exclude=True)
+
+    @root_validator
+    def compute_rating(cls, values) -> Dict:
+        values["rating"] = sum([
+            comment.rating
+            for comment in values["comments"]
+        ])
+        return values
 
     class Config:
         orm_mode = True
@@ -34,7 +45,16 @@ class CreateEventResponseSchema(BaseModel):
     rating: int = Field(..., description="Rating")
     organizators: List[CreateUserResponseSchema]
     members: List[CreateUserResponseSchema]
+    comments: List[CommentResponseSchema] = Field(exclude=True)
     location: str = Field(..., description="location")
+      
+    @root_validator
+    def compute_rating(cls, values) -> Dict:
+        values["rating"] = sum([
+            comment.rating
+            for comment in values["comments"]
+        ])
+        return values
 
     class Config:
         orm_mode = True
