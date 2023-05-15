@@ -1,14 +1,18 @@
 from typing import List, Dict
 
+import requests
+import logging
 from sqlalchemy import select, update, func, DateTime, or_
 import datetime
 
 from app.user.services import UserService
 from core.config import config
 from core.db import session
-from app.event.models import Event
+from app.event.models import Event, EventSubscribers
 from core.db.elastic_db import es_client
 from core.exceptions import NotFoundException, BadRequestException, ForbiddenException
+
+logger = logging.getLogger("app")
 
 
 class EventService:
@@ -128,6 +132,25 @@ class EventService:
             return event
         raise BadRequestException
 
+    async def subscribe_to_event(self, user_id: int, event_id: int) -> Event:
+        event = await self.get_event_or_404(event_id)
+        user = await UserService().get_user_or_404(user_id)
+        event_subscribe = EventSubscribers(user_id=user.id, event_id=event.id)
+        session.add(event_subscribe)
+        await session.commit()
+        await session.refresh(event_subscribe)
+        return event_subscribe
+
+    async def unsubscribe_from_event(self, user_id: int, event_id: int) -> Dict:
+        event = await self.get_event_or_404(event_id)
+        user = await UserService().get_user_or_404(user_id)
+        event_subscribe = await session.scalar(select(EventSubscribers).where(EventSubscribers.user_id == user.id,
+                                                                              EventSubscribers.event_id == event.id))
+        if event_subscribe:
+            await session.delete(event_subscribe)
+            await session.commit()
+        return {}
+
     async def update_by_id(
             self,
             id: int,
@@ -163,6 +186,35 @@ class EventService:
     async def get_upcoming_events(cls) -> List[Event]:
         events = await session.scalars(
             select(Event).where(or_(func.coalesce(Event.date_start).cast(DateTime) > datetime.datetime.now(),
-                                func.coalesce(Event.date_start).cast(DateTime) <= datetime.datetime.now()
-                                + datetime.timedelta(minutes=30))).order_by(Event.date_start))
+                                    func.coalesce(Event.date_start).cast(DateTime) <= datetime.datetime.now()
+                                    + datetime.timedelta(minutes=30))).order_by(Event.date_start))
         return events.unique().all()
+
+    @classmethod
+    def get_address_by_latitude_longitude(cls, lat, lng):
+        try:
+            url = f'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lng}&format=json'
+            response = requests.get(url).json()
+            if 'address' in response.keys():
+                address = response['address']
+                return f"{address['city']} {address['road']} {address['house_number']}"
+            else:
+                return None
+        except Exception as ex:
+            logger.error(ex)
+            return None
+
+    @classmethod
+    def get_latitude_longitude_by_address(cls, address):
+        try:
+            url = f'https://nominatim.openstreetmap.org/search.php?q={address}&format=json'
+            response = requests.get(url).json()
+            if len(response) > 0:
+                lat = response[0]['lat']
+                lon = response[0]['lon']
+                return lat, lon
+            else:
+                return None
+        except Exception as ex:
+            logger.error(ex)
+            return None

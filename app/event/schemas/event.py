@@ -46,7 +46,8 @@ class CreateEventResponseSchema(BaseModel):
     organizators: List[CreateUserResponseSchema]
     members: List[CreateUserResponseSchema]
     comments: List[CommentResponseSchema] = Field(exclude=True)
-
+    location: str = Field(..., description="location")
+      
     @root_validator
     def compute_rating(cls, values) -> Dict:
         values["rating"] = sum([
@@ -54,6 +55,14 @@ class CreateEventResponseSchema(BaseModel):
             for comment in values["comments"]
         ])
         return values
+
+    class Config:
+        orm_mode = True
+
+
+class ResponseEventSubscribeSchema(BaseModel):
+    user_id: int = Field(..., description="user_id")
+    event_id: int = Field(..., description="event_id")
 
     class Config:
         orm_mode = True

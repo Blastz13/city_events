@@ -32,6 +32,7 @@ class Event(Base, TimestampMixin):
     organizators = relationship('User', secondary='event_organizators', backref='selectin', lazy='joined')
     members = relationship('User', secondary='event_members', backref='event_members', lazy='selectin')
     comments = relationship(Comment, back_populates="event", lazy='selectin')
+    subscribers = relationship('User', secondary='event_subscribers', backref='event_subscribers', lazy='joined')
 
 
 @event.listens_for(Event, "after_insert")
@@ -77,6 +78,14 @@ class EventMembers(Base):
 
 class EventOrganizators(Base):
     __tablename__ = "event_organizators"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    event_id = Column(Integer, ForeignKey('events.id'))
+
+
+class EventSubscribers(Base):
+    __tablename__ = "event_subscribers"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'))

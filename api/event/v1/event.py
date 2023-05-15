@@ -8,7 +8,7 @@ from app.event.models import Event
 from app.event.schemas import (
     GetEventResponseSchema,
     CreateEventRequestSchema,
-    CreateEventResponseSchema, ExceptionResponseSchema,
+    CreateEventResponseSchema, ExceptionResponseSchema, ResponseEventSubscribeSchema,
 )
 from app.event.services import EventService
 from core.fastapi.dependencies.permission import IsOwnerDependency, PermissionDependency, IsAuthenticated
@@ -101,6 +101,27 @@ async def create_event(request: Request, event: CreateEventRequestSchema):
 )
 async def add_member_to_event(event_id: int, request: Request):
     return await EventService().add_members_to_event(user_id=request.user.id, event_id=event_id)
+
+
+@event_router.post(
+    "/{event_id}/subscribe",
+    response_model=ResponseEventSubscribeSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    status_code=201
+)
+async def subscribe_to_event(event_id: int, request: Request):
+    return await EventService().subscribe_to_event(user_id=request.user.id, event_id=event_id)
+
+
+@event_router.delete(
+    "/{event_id}/unsubscribe",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    status_code=204
+)
+async def unsubscribe_from_event(event_id: int, request: Request):
+    return await EventService().unsubscribe_from_event(user_id=request.user.id, event_id=event_id)
 
 
 @event_router.put(
