@@ -29,9 +29,9 @@ class Event(Base, TimestampMixin):
     latitude = Column(Float, nullable=False)
     geo = Column(Geometry(geometry_type="POINT"), nullable=False)
 
-    organizators = relationship('User', secondary='event_organizators', backref='event_organizators', lazy='joined')
-    members = relationship('User', secondary='event_members', backref='event_members', lazy='joined')
-    comments = relationship(Comment, back_populates="event", lazy='joined')
+    organizators = relationship('User', secondary='event_organizators', backref='selectin', lazy='joined')
+    members = relationship('User', secondary='event_members', backref='event_members', lazy='selectin')
+    comments = relationship(Comment, back_populates="event", lazy='selectin')
 
 
 @event.listens_for(Event, "after_insert")

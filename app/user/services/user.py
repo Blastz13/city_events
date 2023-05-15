@@ -1,14 +1,14 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
-from sqlalchemy import or_, select, update
+from sqlalchemy import or_, select, update, func
 
-from app.user.models import User
+from app.user.models import User, UserRating
 from app.user.schemas.user import LoginResponseSchema
 from core.db import Transactional, session
 from core.exceptions import (
     PasswordDoesNotMatchException,
     DuplicateEmailOrNicknameException,
-    UserNotFoundException, NotFoundException,
+    UserNotFoundException, NotFoundException, DuplicateValueException,
 )
 from core.utils.password_hasher import Hasher
 from core.utils.token_helper import TokenHelper
@@ -48,7 +48,7 @@ class UserService:
 
     @Transactional()
     async def create_user(
-            self, email: str, password1: str, password2: str, username: str
+            self, email: str, password1: str, password2: str, username: str, is_admin: bool = False
     ) -> None:
         if password1 != password2:
             raise PasswordDoesNotMatchException
@@ -59,7 +59,7 @@ class UserService:
         if is_exist:
             raise DuplicateEmailOrNicknameException
 
-        user = User(email=email, password=Hasher.get_password_hash(password1), username=username)
+        user = User(email=email, password=Hasher.get_password_hash(password1), username=username, is_admin=is_admin)
         session.add(user)
         return user
 
@@ -94,13 +94,54 @@ class UserService:
             select(User).where(User.email == email)
         )
         user = result.scalars().first()
-        if not Hasher.verify_password(password, user.password):
-            raise PasswordDoesNotMatchException
         if not user:
             raise UserNotFoundException
+        if not Hasher.verify_password(password, user.password):
+            raise PasswordDoesNotMatchException
 
         response = LoginResponseSchema(
             token=TokenHelper.encode(payload={"user_id": user.id}),
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )
         return response
+
+    async def add_user_rating(
+            self,
+            user_id: int,
+            evaluated_id: int,
+            rating: int
+    ) -> UserRating:
+        evaluated = await UserService().get_user_or_404(evaluated_id)
+        user_rating = await session.scalars(select(UserRating).where(user_id == user_id, evaluated_id == evaluated.id))
+        if user_rating.first():
+            raise DuplicateValueException
+        rating = UserRating(user_id=user_id, evaluated_id=evaluated.id, rating=rating)
+        session.add(rating)
+        await session.commit()
+        await session.refresh(rating)
+        return rating
+
+    async def remove_user_rating(
+            self,
+            id: int,
+    ) -> Dict:
+        result = await session.execute(select(UserRating).where(UserRating.id == id))
+        instance = result.scalar()
+        if not instance:
+            raise NotFoundException
+        await session.delete(instance)
+        await session.commit()
+        return {}
+
+    async def get_user_rating(
+            self,
+            user_id: int,
+    ) -> UserRating:
+        result = await session.execute(
+            select(User.id, func.sum(UserRating.rating))
+            .where(User.id == user_id)
+            .join(UserRating, UserRating.evaluated_id == User.id).group_by(User.id))
+        instance = result.unique().first()
+        if not instance:
+            return 0
+        return instance[1]

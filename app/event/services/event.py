@@ -8,7 +8,7 @@ from core.config import config
 from core.db import session
 from app.event.models import Event
 from core.db.elastic_db import es_client
-from core.exceptions import NotFoundException, BadRequestException
+from core.exceptions import NotFoundException, BadRequestException, ForbiddenException
 
 
 class EventService:
@@ -106,13 +106,16 @@ class EventService:
         kwargs["geo"] = 'POINT({} {})'.format(kwargs["longitude"], kwargs["latitude"])
         user_id = kwargs.pop("user_id")
         user = await UserService().get_user_or_404(user_id)
-        event = Event(**kwargs)
-        event.organizators.append(user)
-        event.members.append(user)
-        session.add(event)
-        await session.commit()
-        await session.refresh(event)
-        return event
+        if await UserService().get_user_rating(user.id) >= 1000 or await UserService().is_admin(user.id):
+            event = Event(**kwargs)
+            event.organizators.append(user)
+            event.members.append(user)
+            session.add(event)
+            await session.commit()
+            await session.refresh(event)
+            return event
+        else:
+            raise ForbiddenException
 
     async def add_members_to_event(self, user_id: int, event_id: int) -> Event:
         event = await self.get_event_or_404(event_id)

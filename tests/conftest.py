@@ -35,7 +35,8 @@ def init_db():
 
 @pytest.fixture(scope="session", autouse=True)
 async def init_user():
-    user = await UserService().create_user(email="test@mail.ru", password1="pass", password2="pass", username="test")
+    user = await UserService().create_user(email="test@mail.ru", password1="pass",
+                                           password2="pass", username="test", is_admin=True)
     credentials = await UserService().login(email="test@mail.ru", password="pass")
     return user, credentials
 
