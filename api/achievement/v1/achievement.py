@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Query, UploadFile, File, Depends
+from starlette.requests import Request
 
 from app.achievement.models import Achievement
 from app.achievement.schemas import AchievementRequestSchema, AchievementResponseSchema, AssignAchievementRequestSchema
@@ -41,30 +42,31 @@ async def get_achievement(achievement_id: int):
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
 )
-async def create_achievement(achievement: AchievementRequestSchema, file: UploadFile = File(...)):
-    return await AchievementService().create_achievement(file, **achievement.dict())
+async def create_achievement(request: Request, achievement: AchievementRequestSchema, file: UploadFile = File(...)):
+    return await AchievementService().create_achievement(file, user_id=request.user.id, **achievement.dict())
 
 
 @achievement_router.put(
     "/{id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=200
 )
-async def update_achievement(id: int, achievement: AchievementRequestSchema, file: Optional[UploadFile] = File(None)):
-    return await AchievementService().update_achievement(id, file, **achievement.dict())
+async def update_achievement(id: int, request: Request, achievement: AchievementRequestSchema,
+                             file: Optional[UploadFile] = File(None)):
+    return await AchievementService().update_achievement(id, file, user_id=request.user.id, **achievement.dict())
 
 
 @achievement_router.delete(
     "/{id}",
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=204
 
 )
-async def remove_achievement(id: int):
-    return await AchievementService().remove_achievement(id)
+async def remove_achievement(id: int, request: Request):
+    return await AchievementService().remove_achievement(id, user_id=request.user.id)
 
 
 @achievement_router.post(

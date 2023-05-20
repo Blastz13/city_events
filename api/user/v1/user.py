@@ -8,15 +8,16 @@ from api.user.v1.response.user import LoginResponse
 from app.user.models import User, UserRating
 from app.user.schemas import (
     ExceptionResponseSchema,
-    GetUserListResponseSchema,
     CreateUserRequestSchema,
-    CreateUserResponseSchema, GetUserResponseSchema, UpdateUserRequestSchema, RateUserRequestSchema,
+    UserListResponseSchema,
+    UserResponseSchema,
+    UpdateUserRequestSchema,
+    RateUserRequestSchema,
     RateUserResponseSchema,
 )
 from app.user.services import UserService
 from core.fastapi.dependencies import (
     PermissionDependency,
-    IsAdmin,
 )
 from core.fastapi.dependencies.permission import IsOwnerDependency, IsAuthenticated
 
@@ -25,9 +26,8 @@ user_router = APIRouter()
 
 @user_router.get(
     "",
-    response_model=List[GetUserListResponseSchema],
+    response_model=List[UserListResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin]))],
     status_code=200
 )
 async def get_user_list(
@@ -40,13 +40,12 @@ async def get_user_list(
 
 @user_router.post(
     "",
-    response_model=CreateUserResponseSchema,
+    response_model=UserListResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=201
 )
 async def create_user(request: CreateUserRequestSchema):
-    await UserService().create_user(**request.dict())
-    return {"email": request.email, "username": request.username}
+    return await UserService().create_user(**request.dict())
 
 
 @user_router.post(
@@ -62,7 +61,7 @@ async def login(request: LoginRequest):
 
 @user_router.get(
     "/{user_id}",
-    response_model=GetUserResponseSchema,
+    response_model=UserResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
@@ -104,7 +103,7 @@ async def remove_rate_user(id: int):
 
 @user_router.put(
     "/{id}",
-    response_model=GetUserResponseSchema,
+    response_model=UserResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(IsOwnerDependency(User, "id"))],
     status_code=200

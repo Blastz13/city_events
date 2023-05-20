@@ -9,6 +9,7 @@ from app.user.services import UserService
 from core.config import config
 from core.db import session
 from core.exceptions import NotFoundException
+from core.fastapi.dependencies.permission import is_privileged_or_admin
 
 
 class AchievementService:
@@ -18,14 +19,9 @@ class AchievementService:
     @classmethod
     async def get_achievement_list(
             cls,
-            limit: int = 12,
+            limit: int = 10,
     ) -> List[Achievement]:
-        query = select(Achievement)
-
-        if limit > 12:
-            limit = 12
-
-        query = query.limit(limit)
+        query = select(Achievement).limit(limit)
         result = await session.execute(query)
         return result.scalars().unique().all()
 
@@ -39,7 +35,8 @@ class AchievementService:
         return instance
 
     @classmethod
-    async def create_achievement(cls, file: UploadFile, **kwargs: dict) -> Achievement:
+    @is_privileged_or_admin
+    async def create_achievement(cls, file: UploadFile, user_id, **kwargs: dict) -> Achievement:
         path = f"{os.path.join(config.MEDIA_URL, file.filename)}"
         with open(path, "wb") as buffer:
             buffer.write(await file.read())
@@ -49,6 +46,7 @@ class AchievementService:
         await session.refresh(achievement)
         return achievement
 
+    @is_privileged_or_admin
     async def update_achievement(
             self,
             id: int,
@@ -71,7 +69,8 @@ class AchievementService:
         await session.commit()
         return await self.get_achievement_or_404(id)
 
-    async def remove_achievement(self, id: int) -> Dict:
+    @is_privileged_or_admin
+    async def remove_achievement(self, id: int, **kwargs) -> Dict:
         achievement = await self.get_achievement_or_404(id)
         await session.delete(achievement)
         await session.commit()

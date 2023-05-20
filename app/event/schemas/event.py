@@ -4,27 +4,7 @@ from typing import List, Dict
 from pydantic import BaseModel, Field, root_validator
 
 from app.comment.schemas import CommentResponseSchema
-from app.user.schemas import CreateUserResponseSchema
-
-
-class GetEventResponseSchema(BaseModel):
-    id: int = Field(..., description="Id")
-    title: str = Field(..., description="Title")
-    description: str = Field(..., description="Description")
-    rating: int = Field(..., description="Rating")
-    date_start: datetime.datetime = Field(..., description="date_start")
-    comments: List[CommentResponseSchema] = Field(exclude=True)
-
-    @root_validator
-    def compute_rating(cls, values) -> Dict:
-        values["rating"] = sum([
-            comment.rating
-            for comment in values["comments"]
-        ])
-        return values
-
-    class Config:
-        orm_mode = True
+from app.user.schemas import UserListResponseSchema
 
 
 class CreateEventRequestSchema(BaseModel):
@@ -38,16 +18,15 @@ class CreateEventRequestSchema(BaseModel):
     latitude: float = Field(..., description="latitude")
 
 
-class CreateEventResponseSchema(BaseModel):
+class EventListResponseSchema(BaseModel):
     id: int = Field(..., description="Id")
     title: str = Field(..., description="Title")
     description: str = Field(..., description="Description")
     rating: int = Field(..., description="Rating")
-    organizators: List[CreateUserResponseSchema]
-    members: List[CreateUserResponseSchema]
-    comments: List[CommentResponseSchema] = Field(exclude=True)
+    date_start: datetime.datetime = Field(..., description="date_start")
     location: str = Field(..., description="location")
-      
+    comments: List[CommentResponseSchema] = Field(exclude=True)
+
     @root_validator
     def compute_rating(cls, values) -> Dict:
         values["rating"] = sum([
@@ -60,7 +39,17 @@ class CreateEventResponseSchema(BaseModel):
         orm_mode = True
 
 
-class ResponseEventSubscribeSchema(BaseModel):
+class EventResponseSchema(EventListResponseSchema):
+    organizators: List[UserListResponseSchema]
+    members: List[UserListResponseSchema]
+    comments: List[CommentResponseSchema]
+
+    class Config:
+        orm_mode = True
+
+
+class EventSubscribeResponseSchema(BaseModel):
+    id: int = Field(..., description="id")
     user_id: int = Field(..., description="user_id")
     event_id: int = Field(..., description="event_id")
 

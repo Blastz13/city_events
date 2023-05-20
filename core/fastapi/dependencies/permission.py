@@ -13,6 +13,16 @@ from core.exceptions import CustomException, UnauthorizedException, \
 from core.db import session
 
 
+def is_privileged_or_admin(func):
+    async def wrapper(*args, **kwargs):
+        if await UserService().get_user_rating(kwargs["user_id"]) >= 1000 or await UserService().is_admin(
+                kwargs["user_id"]):
+            return await func(*args, **kwargs)
+        raise ForbiddenException
+
+    return wrapper
+
+
 class BasePermission(ABC):
     exception = CustomException
 

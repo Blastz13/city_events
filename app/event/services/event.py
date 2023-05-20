@@ -2,7 +2,7 @@ from typing import List, Dict
 
 import requests
 import logging
-from sqlalchemy import select, update, func, DateTime, or_
+from sqlalchemy import select, update, func, DateTime
 import datetime
 
 from app.user.services import UserService
@@ -141,6 +141,10 @@ class EventService:
         await session.refresh(event_subscribe)
         return event_subscribe
 
+    async def get_event_subscribers(self, event_id: int) -> Event:
+        subscribers = await session.scalars(select(EventSubscribers).where(EventSubscribers.event_id == event_id))
+        return subscribers.unique().all()
+
     async def unsubscribe_from_event(self, user_id: int, event_id: int) -> Dict:
         event = await self.get_event_or_404(event_id)
         user = await UserService().get_user_or_404(user_id)
@@ -185,9 +189,8 @@ class EventService:
     @classmethod
     async def get_upcoming_events(cls) -> List[Event]:
         events = await session.scalars(
-            select(Event).where(or_(func.coalesce(Event.date_start).cast(DateTime) > datetime.datetime.now(),
-                                    func.coalesce(Event.date_start).cast(DateTime) <= datetime.datetime.now()
-                                    + datetime.timedelta(minutes=30))).order_by(Event.date_start))
+            select(Event).where(func.coalesce(Event.date_start).cast(DateTime) >= datetime.datetime.now().utcnow()
+                                - datetime.timedelta(minutes=30)).order_by(Event.date_start))
         return events.unique().all()
 
     @classmethod

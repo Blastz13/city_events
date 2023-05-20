@@ -28,7 +28,7 @@ async def test_get_upcoming_event(client_auth):
         "title": "string",
         "description": "string",
         "link": "string",
-        "date_start": datetime.datetime.now() + datetime.timedelta(minutes=15),
+        "date_start": datetime.datetime.now() + datetime.timedelta(minutes=30),
         "limit_member": 0,
         "location": "string",
         "longitude": 0,
@@ -37,7 +37,7 @@ async def test_get_upcoming_event(client_auth):
     await EventService().create_event(user_id=1, **data)
     response = await client_auth.get("/api/v1/events/upcoming")
     assert response.status_code == 200
-    assert len(response.json()) == 2
+    assert len(response.json()) == 1
 
 
 @pytest.mark.asyncio
