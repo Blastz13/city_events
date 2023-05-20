@@ -26,6 +26,7 @@ class EventModelFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     title = factory.Faker("name")
     description = factory.Faker("text")
+    date_start = factory.Faker("date_time")
     limit_member = factory.Faker("random_int")
     location = factory.Faker("address")
     longitude = factory.Faker("longitude")

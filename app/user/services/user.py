@@ -4,7 +4,7 @@ from sqlalchemy import or_, select, update, func
 
 from app.user.models import User, UserRating
 from app.user.schemas.user import LoginResponseSchema
-from core.db import Transactional, session
+from core.db import session
 from core.exceptions import (
     PasswordDoesNotMatchException,
     DuplicateEmailOrNicknameException,
@@ -20,16 +20,13 @@ class UserService:
 
     async def get_user_list(
             self,
-            limit: int = 12,
+            limit: int = 10,
             prev: Optional[int] = None,
     ) -> List[User]:
         query = select(User)
 
         if prev:
             query = query.where(User.id < prev)
-
-        if limit > 12:
-            limit = 12
 
         query = query.limit(limit)
         result = await session.execute(query)
@@ -46,10 +43,9 @@ class UserService:
             raise NotFoundException
         return instance
 
-    @Transactional()
     async def create_user(
             self, email: str, password1: str, password2: str, username: str, is_admin: bool = False
-    ) -> None:
+    ) -> User:
         if password1 != password2:
             raise PasswordDoesNotMatchException
 
@@ -61,6 +57,8 @@ class UserService:
 
         user = User(email=email, password=Hasher.get_password_hash(password1), username=username, is_admin=is_admin)
         session.add(user)
+        await session.commit()
+        await session.refresh(user)
         return user
 
     async def update_by_id(
@@ -136,7 +134,7 @@ class UserService:
     async def get_user_rating(
             self,
             user_id: int,
-    ) -> UserRating:
+    ) -> int:
         result = await session.execute(
             select(User.id, func.sum(UserRating.rating))
             .where(User.id == user_id)

@@ -7,16 +7,6 @@ from app.user.models import User, UserRating
 from core.db.session import sync_session
 
 
-class GetUserListResponseSchema(BaseModel):
-    id: int = Field(..., description="Id")
-    email: str = Field(..., description="Email")
-    username: str = Field(..., description="Nickname")
-    rating: int = Field(..., description="Rating")
-
-    class Config:
-        orm_mode = True
-
-
 class CreateUserRequestSchema(BaseModel):
     email: str = Field(..., description="Email")
     password1: str = Field(..., description="Password1")
@@ -30,14 +20,6 @@ class UpdateUserRequestSchema(BaseModel):
     username: str = Field(..., description="Nickname")
 
 
-class CreateUserResponseSchema(BaseModel):
-    email: str = Field(..., description="Email")
-    username: str = Field(..., description="Nickname")
-
-    class Config:
-        orm_mode = True
-
-
 class AchievementRequestSchema(BaseModel):
     title: str = Field(..., description="title")
 
@@ -45,10 +27,16 @@ class AchievementRequestSchema(BaseModel):
         orm_mode = True
 
 
-class GetUserResponseSchema(BaseModel):
+class UserListResponseSchema(BaseModel):
     id: int = Field(..., description="Id")
     email: str = Field(..., description="Email")
     username: str = Field(..., description="Nickname")
+
+    class Config:
+        orm_mode = True
+
+
+class UserResponseSchema(UserListResponseSchema):
     rating: int = Field(..., description="Rating")
     achievements: List[AchievementRequestSchema]
 

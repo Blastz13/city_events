@@ -2,16 +2,12 @@ from typing import Dict, List
 
 from starlette.websockets import WebSocket
 
-# from core.db import session
-
 
 class ConnectionChatManager:
     def __init__(self):
         self.active_connections: Dict[List[WebSocket]] = {}
-        # self.db = session
 
     def is_current_user_access(self, chat_id: int, user_id: int):
-        # return self.db.query(User).get(user_id) in self.db.query(ChatRoom).get(chat_id).users
         return True
 
     async def connect(self, websocket: WebSocket, chat_id: int, user_id: int):

@@ -3,13 +3,13 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from app.user.schemas import GetUserListResponseSchema
+from app.user.schemas import UserListResponseSchema
 
 
 class AchievementResponseSchema(BaseModel):
     id: int = Field(..., description="id")
     title: str = Field(..., description="title")
-    users: List[GetUserListResponseSchema] = Field(..., description="users")
+    users: List[UserListResponseSchema] = Field(..., description="users")
     image_url: str = Field(..., description="image_url")
 
     class Config:

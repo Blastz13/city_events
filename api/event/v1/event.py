@@ -6,9 +6,9 @@ from starlette.requests import Request
 
 from app.event.models import Event
 from app.event.schemas import (
-    GetEventResponseSchema,
+    EventListResponseSchema,
     CreateEventRequestSchema,
-    CreateEventResponseSchema, ExceptionResponseSchema, ResponseEventSubscribeSchema,
+    EventResponseSchema, ExceptionResponseSchema, EventSubscribeResponseSchema,
 )
 from app.event.services import EventService
 from core.fastapi.dependencies.permission import IsOwnerDependency, PermissionDependency, IsAuthenticated
@@ -19,7 +19,7 @@ event_router = APIRouter()
 
 @event_router.get(
     "",
-    response_model=List[GetEventResponseSchema],
+    response_model=List[EventListResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
@@ -33,7 +33,7 @@ async def get_event_list(
 
 @event_router.get(
     "/search",
-    response_model=List[GetEventResponseSchema],
+    response_model=List[EventListResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
@@ -48,7 +48,7 @@ async def get_events_by_query(query: str = Query(None),
 
 @event_router.get(
     "/upcoming",
-    response_model=List[GetEventResponseSchema],
+    response_model=List[EventListResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
@@ -58,7 +58,7 @@ async def get_upcoming_events():
 
 @event_router.get(
     "/radius",
-    response_model=List[GetEventResponseSchema],
+    response_model=List[EventListResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
@@ -73,7 +73,7 @@ async def get_events_by_radius(
 
 @event_router.get(
     "/{event_id}",
-    response_model=CreateEventResponseSchema,
+    response_model=EventResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=200
 )
@@ -83,7 +83,7 @@ async def get_event(event_id: int):
 
 @event_router.post(
     "",
-    response_model=CreateEventResponseSchema,
+    response_model=EventResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
@@ -94,7 +94,7 @@ async def create_event(request: Request, event: CreateEventRequestSchema):
 
 @event_router.post(
     "/{event_id}/invite",
-    response_model=CreateEventResponseSchema,
+    response_model=EventResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
@@ -103,9 +103,19 @@ async def add_member_to_event(event_id: int, request: Request):
     return await EventService().add_members_to_event(user_id=request.user.id, event_id=event_id)
 
 
+@event_router.get(
+    "/{event_id}/subscribers",
+    response_model=List[EventSubscribeResponseSchema],
+    responses={"400": {"model": ExceptionResponseSchema}},
+    status_code=200
+)
+async def get_event_subscribers(event_id: int):
+    return await EventService().get_event_subscribers(event_id=event_id)
+
+
 @event_router.post(
     "/{event_id}/subscribe",
-    response_model=ResponseEventSubscribeSchema,
+    response_model=EventSubscribeResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
@@ -126,7 +136,7 @@ async def unsubscribe_from_event(event_id: int, request: Request):
 
 @event_router.put(
     "/{id}",
-    response_model=CreateEventResponseSchema,
+    response_model=EventResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(IsOwnerDependency(Event, "organizators"))],
     status_code=200

@@ -19,6 +19,6 @@ class ObjectId(str):
 
 class MessageResponseSchema(BaseModel):
     id: ObjectId = Field(alias="_id")
-    message: str = Field(..., description="title")
-    user_id: int = Field(..., description="title")
-    username: str = Field(..., description="title")
+    message: str = Field(..., description="message")
+    user_id: int = Field(..., description="user_id")
+    username: str = Field(..., description="username")

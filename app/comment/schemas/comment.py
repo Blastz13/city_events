@@ -2,7 +2,7 @@ import json
 
 from pydantic import BaseModel, Field
 
-from app.user.schemas import CreateUserResponseSchema
+from app.user.schemas import UserListResponseSchema
 
 
 class Base(BaseModel):
@@ -21,7 +21,7 @@ class CommentResponseSchema(BaseModel):
     id: int = Field(..., description="id")
     rating: int = Field(..., description="rating")
     comment: str = Field(..., description="comment")
-    user: CreateUserResponseSchema = Field(..., description="user")
+    user: UserListResponseSchema = Field(..., description="user")
     likes: int = Field(..., description="likes")
     image_url: str | None = Field(..., description="image_url")
 
