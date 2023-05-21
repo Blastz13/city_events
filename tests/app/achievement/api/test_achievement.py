@@ -45,4 +45,4 @@ async def test_delete_achievement(client_auth, init_user):
 async def test_delete_achievement_forbidden_user(client, init_user):
     achievement = AchievementModelFactory()
     response = await client.delete(f"/api/v1/achievement/{achievement.id}")
-    assert response.status_code == 401
+    assert response.status_code == 403

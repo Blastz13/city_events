@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from pydantic import BaseModel, Field, root_validator
 
@@ -16,6 +16,17 @@ class CreateEventRequestSchema(BaseModel):
     location: str = Field(..., description="location")
     longitude: float = Field(..., description="longitude")
     latitude: float = Field(..., description="latitude")
+
+
+class UpdateEventRequestSchema(BaseModel):
+    title: Optional[str] = Field(None, description="title")
+    description: Optional[str] = Field(None, description="description")
+    link: Optional[str] = Field(None, description="link")
+    date_start: Optional[datetime.datetime] = Field(None, description="date_start")
+    limit_member: Optional[int] = Field(None, description="limit_member")
+    location: Optional[str] = Field(None, description="location")
+    longitude: Optional[float] = Field(None, description="longitude")
+    latitude: Optional[float] = Field(None, description="latitude")
 
 
 class EventListResponseSchema(BaseModel):

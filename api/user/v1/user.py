@@ -5,7 +5,7 @@ from starlette.requests import Request
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
-from app.user.models import User, UserRating
+from app.user.models import UserRating
 from app.user.schemas import (
     ExceptionResponseSchema,
     CreateUserRequestSchema,
@@ -34,8 +34,7 @@ async def get_user_list(
         limit: int = Query(10, description="Limit"),
         prev: int = Query(None, description="Prev ID"),
 ):
-    data = await UserService().get_user_list(limit=limit, prev=prev)
-    return data
+    return await UserService().get_user_list(limit=limit, prev=prev)
 
 
 @user_router.post(
@@ -102,11 +101,11 @@ async def remove_rate_user(id: int):
 
 
 @user_router.put(
-    "/{id}",
+    "/",
     response_model=UserResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(IsOwnerDependency(User, "id"))],
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=200
 )
-async def update_user(id: int, user: UpdateUserRequestSchema):
-    return await UserService().update_by_id(id, **user.dict())
+async def update_user(request: Request, user: UpdateUserRequestSchema):
+    return await UserService().update_by_id(request.user.id, **user.dict(exclude_unset=True))

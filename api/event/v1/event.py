@@ -8,7 +8,10 @@ from app.event.models import Event
 from app.event.schemas import (
     EventListResponseSchema,
     CreateEventRequestSchema,
-    EventResponseSchema, ExceptionResponseSchema, EventSubscribeResponseSchema,
+    EventResponseSchema,
+    ExceptionResponseSchema,
+    EventSubscribeResponseSchema,
+    UpdateEventRequestSchema,
 )
 from app.event.services import EventService
 from core.fastapi.dependencies.permission import IsOwnerDependency, PermissionDependency, IsAuthenticated
@@ -141,8 +144,8 @@ async def unsubscribe_from_event(event_id: int, request: Request):
     dependencies=[Depends(IsOwnerDependency(Event, "organizators"))],
     status_code=200
 )
-async def update_event(id: int, event: CreateEventRequestSchema):
-    return await EventService().update_by_id(id, **event.dict())
+async def update_event(id: int, event: UpdateEventRequestSchema):
+    return await EventService().update_by_id(id, **event.dict(exclude_unset=True))
 
 
 @event_router.delete(

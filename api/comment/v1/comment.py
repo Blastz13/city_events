@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File
 from starlette.requests import Request
 
 from app.comment.models import Comment
-from app.comment.schemas import CommentRequestSchema, CommentResponseSchema
+from app.comment.schemas import CreateCommentRequestSchema, CommentResponseSchema, UpdateCommentRequestSchema
 from app.comment.services import CommentService
 from app.user.schemas import ExceptionResponseSchema
 from core.fastapi.dependencies.permission import IsOwnerDependency, PermissionDependency, IsAuthenticated
@@ -42,7 +42,7 @@ async def get_comment(comment_id: int):
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
     status_code=201
 )
-async def create_comment(request: Request, event_id: int, comment: CommentRequestSchema,
+async def create_comment(request: Request, event_id: int, comment: CreateCommentRequestSchema,
                          file: Optional[UploadFile] = File(None)):
     return await CommentService().create_comment(file, **comment.dict(), user_id=request.user.id, event_id=event_id)
 
@@ -54,8 +54,8 @@ async def create_comment(request: Request, event_id: int, comment: CommentReques
     dependencies=[Depends(IsOwnerDependency(Comment, "user_id"))],
     status_code=200
 )
-async def update_comment(id: int, comment: CommentRequestSchema, file: Optional[UploadFile] = File(None)):
-    return await CommentService().update_comment(id, file, **comment.dict())
+async def update_comment(id: int, comment: UpdateCommentRequestSchema, file: Optional[UploadFile] = File(None)):
+    return await CommentService().update_comment(id, file, **comment.dict(exclude_unset=True))
 
 
 @comment_router.delete(

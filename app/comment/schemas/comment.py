@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -29,9 +30,17 @@ class CommentResponseSchema(BaseModel):
         orm_mode = True
 
 
-class CommentRequestSchema(Base):
+class CreateCommentRequestSchema(Base):
     comment: str = Field(..., description="comment")
     rating: int = Field(..., description="rating")
+
+    class Config:
+        orm_mode = True
+
+
+class UpdateCommentRequestSchema(Base):
+    comment: Optional[str] = Field(None, description="comment")
+    rating: Optional[int] = Field(None, description="rating")
 
     class Config:
         orm_mode = True

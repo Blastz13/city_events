@@ -38,6 +38,16 @@ class IsAuthenticated(BasePermission):
         return request.user.id is not None
 
 
+class IsPrivilegedOrAdmin(BasePermission):
+    exception = ForbiddenException
+
+    async def has_permission(self, request: Request) -> bool:
+        if await UserService().get_user_rating(request.user.id) >= 1000 or await UserService().is_admin(
+                request.user.id):
+            return True
+        return False
+
+
 class IsAdmin(BasePermission):
     exception = UnauthorizedException
 

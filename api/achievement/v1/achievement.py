@@ -1,14 +1,12 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Query, UploadFile, File, Depends
-from starlette.requests import Request
 
-from app.achievement.models import Achievement
 from app.achievement.schemas import AchievementRequestSchema, AchievementResponseSchema, AssignAchievementRequestSchema
 from app.achievement.services import AchievementService
 from app.user.schemas import ExceptionResponseSchema
-from core.fastapi.dependencies import PermissionDependency, IsAuthenticated
-from core.fastapi.dependencies.permission import IsOwnerDependency
+from core.fastapi.dependencies import PermissionDependency
+from core.fastapi.dependencies.permission import IsPrivilegedOrAdmin
 
 achievement_router = APIRouter()
 
@@ -39,41 +37,41 @@ async def get_achievement(achievement_id: int):
     "/",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    dependencies=[Depends(PermissionDependency([IsPrivilegedOrAdmin]))],
     status_code=201
 )
-async def create_achievement(request: Request, achievement: AchievementRequestSchema, file: UploadFile = File(...)):
-    return await AchievementService().create_achievement(file, user_id=request.user.id, **achievement.dict())
+async def create_achievement(achievement: AchievementRequestSchema, file: UploadFile = File(...)):
+    return await AchievementService().create_achievement(file, **achievement.dict())
 
 
 @achievement_router.put(
     "/{id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    dependencies=[Depends(PermissionDependency([IsPrivilegedOrAdmin]))],
     status_code=200
 )
-async def update_achievement(id: int, request: Request, achievement: AchievementRequestSchema,
+async def update_achievement(id: int, achievement: AchievementRequestSchema,
                              file: Optional[UploadFile] = File(None)):
-    return await AchievementService().update_achievement(id, file, user_id=request.user.id, **achievement.dict())
+    return await AchievementService().update_achievement(id, file, **achievement.dict())
 
 
 @achievement_router.delete(
     "/{id}",
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+    dependencies=[Depends(PermissionDependency([IsPrivilegedOrAdmin]))],
     status_code=204
 
 )
-async def remove_achievement(id: int, request: Request):
-    return await AchievementService().remove_achievement(id, user_id=request.user.id)
+async def remove_achievement(id: int):
+    return await AchievementService().remove_achievement(id)
 
 
 @achievement_router.post(
     "/{id}",
     response_model=AchievementResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(IsOwnerDependency(Achievement, "users"))],
+    dependencies=[Depends(PermissionDependency([IsPrivilegedOrAdmin]))],
     status_code=201
 )
 async def assign_achievement(id: int, assign: AssignAchievementRequestSchema):
