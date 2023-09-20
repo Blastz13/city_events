@@ -2,7 +2,7 @@ from typing import List, Dict
 
 import requests
 import logging
-from sqlalchemy import select, update, func, DateTime
+from sqlalchemy import select, update, func, DateTime, column, text
 import datetime
 
 from app.user.services import UserService
@@ -10,6 +10,7 @@ from core.config import config
 from core.db import session
 from app.event.models import Event, EventSubscribers
 from core.db.elastic_db import es_client
+from core.db.session import sync_engine
 from core.exceptions import NotFoundException, BadRequestException, ForbiddenException
 
 logger = logging.getLogger("app")
@@ -29,8 +30,8 @@ class EventService:
         return result.scalars().unique().all()
 
     @classmethod
-    async def get_events_by_query(cls, query: str, date_start: datetime.date,
-                                  date_end: datetime.date, offset: int, limit: int) -> List[Event]:
+    async def get_events_by_query(cls, query: str, date_start: datetime.date | None,
+                                  date_end: datetime.date | None, offset: int, limit: int) -> List[Event]:
         elastic_query = {
             "query": {
                 "bool": {
@@ -91,7 +92,16 @@ class EventService:
                         "operator": "or"
                     }
                 })
-
+        # doc = {
+        #     "title": 'test',
+        #     "description": datetime.datetime.now(),
+        #     "date_start": datetime.datetime.now(),
+        # }
+        # await es_client.index(index=config.ELASTICSEARCH_INDEX, id=1, body=doc)
+        # d = {"query": {
+        #         "match_all": {
+        #         },
+        #     }}
         results = await es_client.search(index=config.ELASTICSEARCH_INDEX, body=elastic_query)
         event_ids = [int(result["_id"]) for result in results["hits"]["hits"]]
         events = await session.scalars(select(Event).where(Event.id.in_(event_ids)))
@@ -178,12 +188,16 @@ class EventService:
 
     @classmethod
     async def get_events_by_radius(cls, radius: int, longitude: float, latitude: float) -> List[Event]:
+        stmt = select(Event.id, Event.longitude, Event.latitude, (func.ST_DistanceSphere(Event.geo,
+                                                      func.ST_GeomFromText(
+                                                          f"POINT({longitude} {latitude})"))).label('radius')).where(
+                               func.coalesce(Event.date_start).cast(
+                                   DateTime) >= datetime.datetime.now() - datetime.timedelta(minutes=60))
+        con = sync_engine.connect()
+        result = con.execute(text(f'SELECT id FROM events as e where st_distancesphere(st_makepoint(e.longitude, e.latitude), st_makepoint({longitude}, {latitude})) < {radius}')).all()
+        ids = [row[0] for row in result]
         data = await session.scalars(select(Event)
-                                     .where(func.ST_DistanceSphere(Event.geo,
-                                                                   func.ST_GeomFromText(
-                                                                       f"POINT({longitude} {latitude})")) < radius,
-                                            func.coalesce(Event.date_start).cast(
-                                                DateTime) >= datetime.datetime.now() - datetime.timedelta(minutes=60)))
+                                     .where(Event.id.in_(ids)))
         return data.unique().all()
 
     @classmethod

@@ -1,3 +1,5 @@
+import datetime
+
 import factory
 
 from app.achievement.models import Achievement
@@ -26,7 +28,7 @@ class EventModelFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     title = factory.Faker("name")
     description = factory.Faker("text")
-    date_start = factory.Faker("date_time")
+    date_start = datetime.datetime.now()
     limit_member = factory.Faker("random_int")
     location = factory.Faker("address")
     longitude = factory.Faker("longitude")

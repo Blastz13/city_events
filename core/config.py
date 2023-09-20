@@ -29,10 +29,6 @@ class Config(BaseSettings):
     REDIS_HOST: str = os.getenv("REDIS_HOST", "redis")
     REDIS_PORT: int = os.getenv("REDIS_PORT", 6379)
 
-    ELASTICSEARCH_HOSTS: str = f"{os.getenv('ELASTICSEARCH_HOSTS', 'elasticsearch')}"
-    ELASTICSEARCH_PORT: str = f"{os.getenv('ELASTICSEARCH_PORT', 9200)}"
-    ELASTICSEARCH_INDEX: str = f"{os.getenv('ELASTICSEARCH_INDEX', 'events')}"
-
     SMTP_SERVER: str = os.getenv("SMTP_SERVER", "")
     SMTP_PORT: int = os.getenv("SMTP_PORT", 0)
     SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
@@ -52,6 +48,9 @@ class DevelopmentConfig(Config):
                               f"{os.getenv('POSTGRES_PASSWORD_DEV')}@" \
                               f"{os.getenv('POSTGRES_HOST_DEV')}:" \
                               f"{os.getenv('POSTGRES_PORT_DEV')}/{os.getenv('POSTGRES_DB_DEV')}"
+    # ELASTICSEARCH_HOSTS: str = f"{os.getenv('ELASTICSEARCH_HOSTS', 'elasticsearch')}"
+    # ELASTICSEARCH_PORT: str = f"{os.getenv('ELASTICSEARCH_PORT', 9200)}"
+    # ELASTICSEARCH_INDEX: str = f"{os.getenv('ELASTICSEARCH_INDEX', 'events')}"
 
 
 class LocalConfig(Config):
@@ -67,6 +66,9 @@ class LocalConfig(Config):
                               f"{os.getenv('POSTGRES_PASSWORD_LOCAL')}@" \
                               f"{os.getenv('POSTGRES_HOST_LOCAL')}:" \
                               f"{os.getenv('POSTGRES_PORT_LOCAL')}/{os.getenv('POSTGRES_DB_LOCAL')}"
+    # ELASTICSEARCH_HOSTS: str = f"{os.getenv('ELASTICSEARCH_HOSTS', 'elasticsearch')}"
+    # ELASTICSEARCH_PORT: str = f"{os.getenv('ELASTICSEARCH_PORT', 9200)}"
+    # ELASTICSEARCH_INDEX: str = f"{os.getenv('ELASTICSEARCH_INDEX', 'events')}"
 
 
 class TestConfig(Config):
@@ -83,6 +85,10 @@ class TestConfig(Config):
                               f"{os.getenv('POSTGRES_PASSWORD_TEST')}@" \
                               f"{os.getenv('POSTGRES_HOST_TEST')}:" \
                               f"{os.getenv('POSTGRES_PORT_TEST')}/{os.getenv('POSTGRES_DB_TEST')}"
+
+    ELASTICSEARCH_HOSTS: str = f"213213"
+    ELASTICSEARCH_PORT: str = f"{os.getenv('ELASTICSEARCH_PORT_TEST')}"
+    ELASTICSEARCH_INDEX: str = f"{os.getenv('ELASTICSEARCH_INDEX_TEST')}"
 
 
 class ProductionConfig(Config):

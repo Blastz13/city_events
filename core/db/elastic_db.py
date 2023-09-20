@@ -4,6 +4,7 @@ from elasticsearch import AsyncElasticsearch
 
 from core.config import config
 
+
 ELASTICSEARCH_HOSTS = [f"http://{config.ELASTICSEARCH_HOSTS}:{config.ELASTICSEARCH_PORT}"]
 
 es_client = AsyncElasticsearch(hosts=ELASTICSEARCH_HOSTS)
